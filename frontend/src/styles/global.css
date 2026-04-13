@@ -1,0 +1,241 @@
+/* ─── CFFR Global Styles ───────────────────────────────────────────────────── */
+/* Royal Blue + White theme with clean, student-friendly design                */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+/* ─── CSS Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --royal-blue:       #2C5FC3;
+  --royal-blue-dark:  #1E45A0;
+  --royal-blue-light: #4A7FE5;
+  --royal-blue-pale:  #EEF3FC;
+  --royal-blue-mid:   #D4E1FA;
+
+  --white:            #FFFFFF;
+  --off-white:        #F8FAFF;
+  --text-dark:        #0F1C3F;
+  --text-mid:         #3D5080;
+  --text-light:       #7A90C0;
+
+  --success:          #16A34A;
+  --success-pale:     #DCFCE7;
+  --warning:          #D97706;
+  --warning-pale:     #FEF3C7;
+  --error:            #DC2626;
+  --error-pale:       #FEE2E2;
+
+  --border:           #D4E1FA;
+  --shadow-sm:        0 1px 3px rgba(44, 95, 195, 0.08);
+  --shadow-md:        0 4px 16px rgba(44, 95, 195, 0.12);
+  --shadow-lg:        0 8px 32px rgba(44, 95, 195, 0.16);
+
+  --radius-sm:        8px;
+  --radius-md:        12px;
+  --radius-lg:        20px;
+  --radius-xl:        28px;
+
+  --font-display:     'Plus Jakarta Sans', sans-serif;
+  --font-body:        'Inter', sans-serif;
+
+  --transition:       all 0.2s ease;
+}
+
+/* ─── Reset & Base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family:      var(--font-body);
+  background-color: var(--off-white);
+  color:            var(--text-dark);
+  line-height:      1.6;
+  min-height:       100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family:  var(--font-display);
+  line-height:  1.2;
+  color:        var(--text-dark);
+}
+
+a {
+  color:           var(--royal-blue);
+  text-decoration: none;
+  transition:      var(--transition);
+}
+
+a:hover {
+  color: var(--royal-blue-dark);
+}
+
+button {
+  cursor:      pointer;
+  font-family: var(--font-body);
+  transition:  var(--transition);
+}
+
+/* ─── Layout Utilities ───────────────────────────────────────────────────────── */
+.container {
+  width:     100%;
+  max-width: 720px;
+  margin:    0 auto;
+  padding:   0 20px;
+}
+
+.page {
+  min-height: 100vh;
+  display:    flex;
+  flex-direction: column;
+}
+
+/* ─── Primary Button ─────────────────────────────────────────────────────────── */
+.btn-primary {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             8px;
+  background:      var(--royal-blue);
+  color:           var(--white);
+  border:          none;
+  border-radius:   var(--radius-md);
+  padding:         14px 32px;
+  font-size:       1rem;
+  font-weight:     600;
+  font-family:     var(--font-display);
+  letter-spacing:  0.01em;
+  box-shadow:      var(--shadow-md);
+  transition:      var(--transition);
+  width:           100%;
+}
+
+.btn-primary:hover {
+  background:  var(--royal-blue-dark);
+  box-shadow:  var(--shadow-lg);
+  transform:   translateY(-1px);
+}
+
+.btn-primary:active {
+  transform:  translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:disabled {
+  background:    var(--text-light);
+  box-shadow:    none;
+  cursor:        not-allowed;
+  transform:     none;
+}
+
+/* ─── Secondary Button ───────────────────────────────────────────────────────── */
+.btn-secondary {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             8px;
+  background:      var(--white);
+  color:           var(--royal-blue);
+  border:          2px solid var(--royal-blue);
+  border-radius:   var(--radius-md);
+  padding:         12px 32px;
+  font-size:       1rem;
+  font-weight:     600;
+  font-family:     var(--font-display);
+  transition:      var(--transition);
+  width:           100%;
+}
+
+.btn-secondary:hover {
+  background: var(--royal-blue-pale);
+  transform:  translateY(-1px);
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────────── */
+.card {
+  background:    var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow:    var(--shadow-md);
+  padding:       32px;
+  border:        1px solid var(--border);
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────────── */
+.badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  padding:       4px 12px;
+  border-radius: 999px;
+  font-size:     0.78rem;
+  font-weight:   600;
+  font-family:   var(--font-display);
+}
+
+.badge-blue {
+  background: var(--royal-blue-pale);
+  color:      var(--royal-blue);
+}
+
+.badge-green {
+  background: var(--success-pale);
+  color:      var(--success);
+}
+
+/* ─── Score Bar ──────────────────────────────────────────────────────────────── */
+.score-bar-track {
+  background:    var(--royal-blue-pale);
+  border-radius: 999px;
+  height:        8px;
+  overflow:      hidden;
+}
+
+.score-bar-fill {
+  height:        100%;
+  border-radius: 999px;
+  background:    linear-gradient(90deg, var(--royal-blue-light), var(--royal-blue));
+  transition:    width 1s ease;
+}
+
+/* ─── Loading Spinner ────────────────────────────────────────────────────────── */
+.spinner {
+  width:         40px;
+  height:        40px;
+  border:        3px solid var(--royal-blue-mid);
+  border-top:    3px solid var(--royal-blue);
+  border-radius: 50%;
+  animation:     spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Fade In Animation ──────────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity:   0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity:   1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .card    { padding: 20px; }
+  .container { padding: 0 16px; }
+}
