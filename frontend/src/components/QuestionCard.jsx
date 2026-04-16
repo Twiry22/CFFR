@@ -1,29 +1,25 @@
 /**
- * QuestionCard Component  v1.1
- * Handles three question types:
- *   "single" — classic radio, 1 pick only
- *   "multi"  — checkboxes, up to maxPicks (default 3)
- *   "dual"   — checkboxes, up to 2 picks, with nudge-to-1 messaging
+ * QuestionCard Component  v1.3
+ * Handles: single, multi, dual, county
+ * Fix: county selection now correctly passes plain string to onAnswer
  */
+
+import CountySelect from "./CountySelect";
 
 const QuestionCard = ({ question, answer, onAnswer }) => {
   const { type, maxPicks = 1 } = question;
 
-  // Normalise answer to array for internal logic
+  // Normalise to array for multi/dual internal logic
   const selected = Array.isArray(answer) ? answer : answer ? [answer] : [];
 
   const handleSelect = (value) => {
-    if (type === "single") {
-      // Always a plain string for single questions
-      onAnswer(value);
+    if (type === "single" || type === "county") {
+      onAnswer(value); // always plain string
       return;
     }
-
-    // multi / dual — toggle behaviour
+    // multi / dual — toggle
     if (selected.includes(value)) {
-      const next = selected.filter((v) => v !== value);
-      // For single questions that mistakenly reach here, keep as string
-      onAnswer(next);
+      onAnswer(selected.filter((v) => v !== value));
     } else {
       if (selected.length < maxPicks) {
         onAnswer([...selected, value]);
@@ -31,25 +27,93 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
     }
   };
 
-  const isSelected = (value) => selected.includes(value);
-  const maxReached = (value) =>
-    type !== "single" && selected.length >= maxPicks && !isSelected(value);
+  const isSelected  = (value) => selected.includes(value);
+  const maxReached  = (value) =>
+    type !== "single" && type !== "county" && selected.length >= maxPicks && !isSelected(value);
 
-  // ── Badge label at top of question ──────────────────────────────────────────
+  // ── Badge text ─────────────────────────────────────────────────────────────
   const badgeText = () => {
-    if (type === "single") return "Select one";
-    if (type === "multi")  return `Select up to ${maxPicks} · ${selected.length} selected`;
+    if (type === "single")  return "Select one";
+    if (type === "county")  return "Search or scroll";
+    if (type === "multi")   return `Select up to ${maxPicks} · ${selected.length} selected`;
     if (type === "dual") {
       if (selected.length === 0) return "Select 1, or 2 if you're truly torn";
-      if (selected.length === 1) return "1 selected — or pick a 2nd if you're unsure";
+      if (selected.length === 1) return "1 selected — or pick a 2nd if unsure";
       return "2 selected";
     }
     return "Select one";
   };
 
-  // ── Indicator shape: circle for single, square for multi/dual ───────────────
   const indicatorRadius = type === "single" ? "50%" : "5px";
 
+  // ── County question — render searchable dropdown ──────────────────────────
+  if (type === "county") {
+    return (
+      <div className="fade-in-up">
+        {/* Badge */}
+        <div style={{
+          display:      "inline-flex",
+          alignItems:   "center",
+          background:   "var(--royal-blue-pale)",
+          color:        "var(--royal-blue)",
+          borderRadius: "999px",
+          padding:      "4px 14px",
+          fontSize:     "0.78rem",
+          fontWeight:   "700",
+          fontFamily:   "var(--font-display)",
+          marginBottom: "16px",
+          letterSpacing:"0.04em",
+        }}>
+          Q{question.number} · {badgeText()}
+        </div>
+
+        {/* Question */}
+        <h2 style={{
+          fontFamily:   "var(--font-display)",
+          fontSize:     "clamp(1.1rem, 3vw, 1.4rem)",
+          fontWeight:   "700",
+          color:        "var(--text-dark)",
+          marginBottom: "8px",
+          lineHeight:   "1.3",
+        }}>
+          {question.question}
+        </h2>
+
+        {/* Hint */}
+        <p style={{
+          fontSize:     "0.88rem",
+          color:        "var(--text-light)",
+          marginBottom: "24px",
+        }}>
+          {question.hint}
+        </p>
+
+        {/* County dropdown */}
+        <CountySelect
+          options={question.options}
+          value={answer || ""}
+          onSelect={(val) => onAnswer(val)}
+        />
+
+        {/* Confirmation */}
+        {answer && (
+          <div style={{
+            marginTop:    "12px",
+            padding:      "10px 14px",
+            background:   "var(--success-pale)",
+            borderRadius: "var(--radius-sm)",
+            fontSize:     "0.85rem",
+            color:        "var(--success)",
+            fontWeight:   "600",
+          }}>
+            ✅ {answer} selected — click Next to continue
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── All other question types ───────────────────────────────────────────────
   return (
     <div className="fade-in-up">
 
@@ -70,7 +134,7 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
         Q{question.number} · {badgeText()}
       </div>
 
-      {/* Question text */}
+      {/* Question */}
       <h2 style={{
         fontFamily:   "var(--font-display)",
         fontSize:     "clamp(1.1rem, 3vw, 1.4rem)",
@@ -82,32 +146,30 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
         {question.question}
       </h2>
 
-      {/* Hint — shown for dual questions to set expectations */}
+      {/* Hint */}
       {question.hint && (
         <p style={{
           fontSize:     "0.88rem",
           color:        "var(--text-light)",
           marginBottom: "24px",
-          fontFamily:   "var(--font-body)",
           fontStyle:    type === "dual" ? "italic" : "normal",
         }}>
           {question.hint}
         </p>
       )}
 
-      {/* Dual-pick contextual nudge — appears after 1 pick */}
+      {/* Dual nudge after 1st pick */}
       {type === "dual" && selected.length === 1 && (
         <div style={{
-          background:    "var(--royal-blue-pale)",
-          border:        "1px solid var(--royal-blue-mid)",
-          borderRadius:  "var(--radius-sm)",
-          padding:       "10px 14px",
-          marginBottom:  "16px",
-          fontSize:      "0.82rem",
-          color:         "var(--royal-blue-dark)",
-          fontFamily:    "var(--font-body)",
+          background:   "var(--royal-blue-pale)",
+          border:       "1px solid var(--royal-blue-mid)",
+          borderRadius: "var(--radius-sm)",
+          padding:      "10px 14px",
+          marginBottom: "16px",
+          fontSize:     "0.82rem",
+          color:        "var(--royal-blue-dark)",
         }}>
-          ✅ Good choice. If another option also feels like you, go ahead and pick it too — otherwise move on.
+          ✅ Good choice. Pick a 2nd if another also feels like you — otherwise click Next.
         </div>
       )}
 
@@ -127,12 +189,8 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
                 gap:          "14px",
                 padding:      "14px 18px",
                 borderRadius: "var(--radius-md)",
-                border:       active
-                  ? "2px solid var(--royal-blue)"
-                  : "2px solid var(--border)",
-                background:   active
-                  ? "var(--royal-blue-pale)"
-                  : "var(--white)",
+                border:       active ? "2px solid var(--royal-blue)" : "2px solid var(--border)",
+                background:   active ? "var(--royal-blue-pale)" : "var(--white)",
                 cursor:       disabled ? "not-allowed" : "pointer",
                 opacity:      disabled ? 0.4 : 1,
                 textAlign:    "left",
@@ -147,9 +205,7 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
                 height:         "20px",
                 minWidth:       "20px",
                 borderRadius:   indicatorRadius,
-                border:         active
-                  ? "2px solid var(--royal-blue)"
-                  : "2px solid var(--text-light)",
+                border:         active ? "2px solid var(--royal-blue)" : "2px solid var(--text-light)",
                 background:     active ? "var(--royal-blue)" : "transparent",
                 display:        "flex",
                 alignItems:     "center",
@@ -158,13 +214,8 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
               }}>
                 {active && (
                   <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                    <path
-                      d="M1 4L4 7.5L10 1"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
               </div>

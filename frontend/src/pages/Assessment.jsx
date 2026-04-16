@@ -1,8 +1,6 @@
 /**
- * Assessment Page  v1.1
- * Handles single, multi, and dual question types.
- * For dual questions: sends array to backend (1 or 2 items).
- * For single questions: sends plain string.
+ * Assessment Page  v1.3
+ * Fixed: county type now correctly registers as answered.
  */
 
 import { useState } from "react";
@@ -20,48 +18,44 @@ const Assessment = ({ onComplete }) => {
   const currentQuestion = QUESTIONS[currentIndex];
   const currentAnswer   = answers[currentQuestion.id];
 
-  // ── Determine if question has a valid answer ─────────────────────────────────
+  // ── Determine if current question has a valid answer ─────────────────────
   const isAnswered = () => {
     const { type } = currentQuestion;
-    if (!currentAnswer) return false;
 
-    if (type === "single") {
-      return typeof currentAnswer === "string" && currentAnswer !== "";
+    if (currentAnswer === undefined || currentAnswer === null || currentAnswer === "") {
+      return false;
     }
+
+    if (type === "single" || type === "county") {
+      return typeof currentAnswer === "string" && currentAnswer.trim() !== "";
+    }
+
     if (type === "multi" || type === "dual") {
       return Array.isArray(currentAnswer) && currentAnswer.length > 0;
     }
+
     return false;
   };
 
-  // ── Normalise answer before storing ─────────────────────────────────────────
-  // single → plain string
-  // multi / dual → always array
+  // ── Store answer ──────────────────────────────────────────────────────────
   const handleAnswer = (value) => {
-    const { type } = currentQuestion;
-
-    if (type === "single") {
-      // value comes in as a plain string from QuestionCard
-      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
-    } else {
-      // multi / dual — value is already an array from QuestionCard
-      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
-    }
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
   };
 
-  // ── Build the final answers payload for the backend ──────────────────────────
-  // Q3 and Q4 (dual) can be array of 1 or 2.
-  // All single questions must be plain strings.
+  // ── Build clean payload for backend ──────────────────────────────────────
   const buildPayload = () => {
     const payload = { ...answers };
 
     QUESTIONS.forEach((q) => {
-      if (q.type === "single" && Array.isArray(payload[q.id])) {
-        // Shouldn't happen, but safety net
-        payload[q.id] = payload[q.id][0];
+      if (q.type === "single" || q.type === "county") {
+        if (Array.isArray(payload[q.id])) {
+          payload[q.id] = payload[q.id][0];
+        }
       }
-      if ((q.type === "multi" || q.type === "dual") && !Array.isArray(payload[q.id])) {
-        payload[q.id] = payload[q.id] ? [payload[q.id]] : [];
+      if (q.type === "multi" || q.type === "dual") {
+        if (!Array.isArray(payload[q.id])) {
+          payload[q.id] = payload[q.id] ? [payload[q.id]] : [];
+        }
       }
     });
 
@@ -90,7 +84,7 @@ const Assessment = ({ onComplete }) => {
     if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
   };
 
-  // ── Loading screen ────────────────────────────────────────────────────────────
+  // ── Loading screen ────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div style={{
@@ -125,7 +119,7 @@ const Assessment = ({ onComplete }) => {
     );
   }
 
-  // ── Assessment screen ─────────────────────────────────────────────────────────
+  // ── Assessment screen ─────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight:     "100vh",
