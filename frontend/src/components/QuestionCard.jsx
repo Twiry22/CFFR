@@ -88,13 +88,11 @@ const QuestionCard = ({ question, answer, onAnswer }) => {
           {question.hint}
         </p>
 
-        {/* County dropdown */}
-        <CountySelect
-          options={question.options}
-          value={answer || ""}
-          onSelect={(val) => onAnswer(val)}
-        />
-
+       <CountySelect
+       options={question.options}
+       value={answer || ""}
+       onSelect={handleSelect}
+       />
         {/* Confirmation */}
         {answer && (
           <div style={{
