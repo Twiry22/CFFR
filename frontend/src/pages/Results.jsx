@@ -155,7 +155,7 @@ const Results = ({ result, onRetake }) => {
                   textTransform:"uppercase",
                   letterSpacing:"0.05em",
                 }}>
-                  🔍 Also Worth Exploring
+                 Also Worth Exploring
                 </p>
                 <p style={{
                   fontSize:   "0.92rem",
@@ -184,7 +184,7 @@ const Results = ({ result, onRetake }) => {
             maxWidth:   "600px",
             margin:     "0 auto 32px",
           }}>
-            💡 {disclaimer}
+             {disclaimer}
           </p>
 
           {/* Retake */}
