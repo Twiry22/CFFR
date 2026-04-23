@@ -69,7 +69,7 @@ const FUTURE_MINDSETS = [
 // ─── Subject to Cluster Affinity ─────────────────────────────────────────────
 
 const SUBJECT_CLUSTER_AFFINITY = {
-  mathematics:           ["technology_data", "engineering_built", "business_finance", "agricultural_tech"],
+  mathematics:           ["engineering_built", "business_finance", "technology_data", "agricultural_tech"],
   biology:               ["health_sciences", "agricultural_tech", "green_economy"],
   chemistry:             ["health_sciences", "engineering_built", "green_economy", "agricultural_tech"],
   physics:               ["engineering_built", "technology_data", "green_economy"],
@@ -95,7 +95,7 @@ const SUBJECT_CLUSTER_AFFINITY = {
 
 const ACTIVITY_CLUSTER_AFFINITY = {
   people_difference: ["health_sciences", "social_governance", "agricultural_tech"],
-  solving_figuring:  ["technology_data", "engineering_built", "green_economy", "business_finance"],
+  solving_figuring:  ["engineering_built", "technology_data", "green_economy", "business_finance"],
   creating_building: ["creative_economy", "engineering_built", "technology_data", "agricultural_tech"],
 };
 

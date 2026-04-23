@@ -3,6 +3,11 @@
  * 8 Kenya-specific clusters, each mapped to a CBC Senior Secondary pathway.
  * futureRelevanceIndex: 3-year Kenya outlook (2026–2029) based on innovation trends.
  * marketDemandIndex:    Current Kenya job market demand.
+ *
+ * FIX v1.1: activityKey values corrected to match ACTIVITY_CLUSTER_AFFINITY
+ * keys in scorer.js: "people_difference" | "solving_figuring" | "creating_building"
+ * FIX v1.2: subjectInterest / subjectAptitude corrected to match SUBJECTS list
+ * in scorer.js so subject-affinity scoring works correctly.
  */
 
 const CAREER_CLUSTERS = {
@@ -29,9 +34,10 @@ const CAREER_CLUSTERS = {
       "UX/UI Designer",
       "Systems Administrator",
     ],
-    subjectInterest: ["mathematics", "computer_ict"],
-    subjectAptitude: ["mathematics", "computer_ict"],
-    activityKey: "computers_technology",
+    subjectInterest: ["mathematics", "computer_studies"],
+    subjectAptitude: ["mathematics", "computer_studies"],
+    // FIXED: was "computers_technology" — not a valid key in ACTIVITY_CLUSTER_AFFINITY
+    activityKey: "solving_figuring",
     personalityKey: "curious_analytical",
     jobValueKey: "good_income",
     careerSpaceKey: "ai_data_technology",
@@ -68,9 +74,10 @@ const CAREER_CLUSTERS = {
       "Physiotherapist",
       "Lab Scientist",
     ],
-    subjectInterest: ["science", "agriculture_nutrition", "social_studies_cre"],
-    subjectAptitude: ["science", "agriculture_nutrition"],
-    activityKey: "helping_caring",
+    subjectInterest: ["biology", "chemistry", "home_science"],
+    subjectAptitude: ["biology", "chemistry"],
+    // FIXED: was "helping_caring"
+    activityKey: "people_difference",
     personalityKey: "caring_social",
     jobValueKey: "making_difference",
     careerSpaceKey: "healthcare_medicine_mental_health",
@@ -101,9 +108,10 @@ const CAREER_CLUSTERS = {
       "Renewable Energy Engineer",
       "Construction Project Manager",
     ],
-    subjectInterest: ["mathematics", "science", "computer_ict"],
-    subjectAptitude: ["mathematics", "science"],
-    activityKey: "building_fixing",
+    subjectInterest: ["mathematics", "physics", "computer_studies"],
+    subjectAptitude: ["mathematics", "physics"],
+    // FIXED: was "building_fixing"
+    activityKey: "creating_building",
     personalityKey: "curious_analytical",
     jobValueKey: "building_creating",
     careerSpaceKey: "climate_renewable_energy",
@@ -134,13 +142,19 @@ const CAREER_CLUSTERS = {
       "Sustainability Consultant",
       "Wildlife Ecologist",
     ],
-    subjectInterest: ["science", "agriculture_nutrition", "social_studies_cre"],
-    subjectAptitude: ["science", "agriculture_nutrition", "mathematics"],
-    activityKey: "nature_animals_food",
+    subjectInterest: ["biology", "geography", "agriculture"],
+    subjectAptitude: ["biology", "geography", "mathematics"],
+    // FIXED: was "nature_animals_food"
+    activityKey: "solving_figuring",
     personalityKey: "environmental_caring",
     jobValueKey: "making_difference",
     careerSpaceKey: "climate_renewable_energy",
-    futureMindsetKeys: ["keep_learning", "cutting_edge", "work_within_community", "work_online_internationally"],
+    futureMindsetKeys: [
+      "keep_learning",
+      "cutting_edge",
+      "work_within_community",
+      "work_online_internationally",
+    ],
     isTechCluster: false,
     isHealthCluster: false,
   },
@@ -168,9 +182,10 @@ const CAREER_CLUSTERS = {
       "Journalist & Media Producer",
       "Photographer",
     ],
-    subjectInterest: ["creative_arts", "english_literature", "computer_ict"],
-    subjectAptitude: ["creative_arts", "english_literature"],
-    activityKey: "creating_art",
+    subjectInterest: ["art_design", "english", "computer_studies"],
+    subjectAptitude: ["art_design", "english"],
+    // FIXED: was "creating_art"
+    activityKey: "creating_building",
     personalityKey: "creative_expressive",
     jobValueKey: "creative_expression",
     careerSpaceKey: "digital_media_content_design",
@@ -206,9 +221,10 @@ const CAREER_CLUSTERS = {
       "Human Resources Manager",
       "Fintech Specialist",
     ],
-    subjectInterest: ["mathematics", "business_studies", "english_literature"],
+    subjectInterest: ["mathematics", "business_studies", "english"],
     subjectAptitude: ["mathematics", "business_studies"],
-    activityKey: "organizing_leading",
+    // FIXED: was "organizing_leading"
+    activityKey: "solving_figuring",
     personalityKey: "organized_goal_setter",
     jobValueKey: "good_income",
     careerSpaceKey: "finance_banking_entrepreneurship",
@@ -240,9 +256,10 @@ const CAREER_CLUSTERS = {
       "Human Rights Advocate",
       "NGO Programme Manager",
     ],
-    subjectInterest: ["english_literature", "kiswahili", "social_studies_cre"],
-    subjectAptitude: ["english_literature", "social_studies_cre"],
-    activityKey: "communicating_teaching",
+    subjectInterest: ["english", "kiswahili", "history_government"],
+    subjectAptitude: ["english", "history_government"],
+    // FIXED: was "communicating_teaching"
+    activityKey: "people_difference",
     personalityKey: "caring_social",
     jobValueKey: "making_difference",
     careerSpaceKey: "law_policy_governance",
@@ -274,9 +291,10 @@ const CAREER_CLUSTERS = {
       "Animal Scientist",
       "Agribusiness Manager",
     ],
-    subjectInterest: ["agriculture_nutrition", "science", "business_studies"],
-    subjectAptitude: ["agriculture_nutrition", "science", "mathematics"],
-    activityKey: "nature_animals_food",
+    subjectInterest: ["agriculture", "biology", "business_studies"],
+    subjectAptitude: ["agriculture", "biology", "mathematics"],
+    // FIXED: was "nature_animals_food"
+    activityKey: "people_difference",
     personalityKey: "environmental_caring",
     jobValueKey: "making_difference",
     careerSpaceKey: "modern_agribusiness_food_tech",
