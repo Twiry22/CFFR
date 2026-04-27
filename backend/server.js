@@ -9,6 +9,7 @@ const helmet       = require("helmet");
 const cors         = require("cors");
 const rateLimit    = require("express-rate-limit");
 const assessRouter = require("./routes/assess");
+const payRouter    = require("./routes/pay");      // ← NEW: Mpesa payment route
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -19,24 +20,19 @@ app.use(helmet({
 }));
 
 // ─── Security: CORS ───────────────────────────────────────────────────────────
-// FIX: Hardcode all known frontend origins instead of relying on a single
-// ALLOWED_ORIGIN env var that was never set on Render, causing all production
-// requests to be blocked with a 403 CORS error.
 const allowedOrigins = [
-  "https://cffr.projectdatahub.org",       // production frontend
-  "https://cffr-frontend.onrender.com",    // Render frontend (if applicable)
-  "http://localhost:5173",                  // Vite dev server
-  "http://localhost:3000",                  // fallback dev
+  "https://cffr.projectdatahub.org",
+  "https://cffr-frontend.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:3000",
 ];
 
-// Also allow any extra origin set via environment variable on Render
 if (process.env.ALLOWED_ORIGIN && !allowedOrigins.includes(process.env.ALLOWED_ORIGIN)) {
   allowedOrigins.push(process.env.ALLOWED_ORIGIN.trim());
 }
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. curl, Postman, server-to-server)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -45,12 +41,11 @@ app.use(cors({
       callback(new Error(`CORS policy: origin '${origin}' is not allowed.`));
     }
   },
-  methods:          ["GET", "POST", "OPTIONS"],
-  allowedHeaders:   ["Content-Type"],
-  optionsSuccessStatus: 200, // some legacy browsers choke on 204
+  methods:              ["GET", "POST", "OPTIONS"],
+  allowedHeaders:       ["Content-Type"],
+  optionsSuccessStatus: 200,
 }));
 
-// Explicitly handle preflight OPTIONS requests for all routes
 app.options("*", cors());
 
 // ─── Security: Rate Limiting ──────────────────────────────────────────────────
@@ -72,6 +67,7 @@ app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api", assessRouter);
+app.use("/api/pay", payRouter);    // ← NEW: Mpesa routes
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -79,8 +75,11 @@ app.get("/", (_req, res) => {
     name:        "CFFR API",
     description: "Career Fit & Future Readiness — Kenya CBC Career Guidance Engine",
     endpoints: {
-      health: "GET  /api/health",
-      assess: "POST /api/assess",
+      health:      "GET  /api/health",
+      assess:      "POST /api/assess",
+      pay:         "POST /api/pay",
+      payCallback: "POST /api/pay/callback",
+      payStatus:   "GET  /api/pay/status/:checkoutId",
     },
   });
 });
@@ -109,7 +108,7 @@ app.listen(PORT, () => {
   ║  Server running on  → http://localhost:${PORT}          ║
   ║  Health check       → GET  /api/health               ║
   ║  Assessment         → POST /api/assess               ║
-  ║  Allowed origins    → ${allowedOrigins.length} configured              ║
+  ║  Mpesa Pay          → POST /api/pay                  ║
   ╚══════════════════════════════════════════════════════╝
   `);
   console.log("[CFFR] Allowed origins:", allowedOrigins);
