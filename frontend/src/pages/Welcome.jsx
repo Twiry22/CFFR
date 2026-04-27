@@ -137,7 +137,7 @@ const Welcome = ({ onStart }) => {
             marginTop:  "24px",
             lineHeight: "1.6",
           }}>
-            CFFR gives you directions to explore — not a final verdict.
+            CFFR gives you directions to explore: not a final verdict.
             Your interests will grow as you discover more about the world.
           </p>
 
