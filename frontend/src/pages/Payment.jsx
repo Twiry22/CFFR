@@ -19,7 +19,7 @@ const Payment = ({ onPaid }) => {
   const handlePay = async () => {
     const cleaned = phone.replace(/\s+/g, "");
     if (!/^(07|01|\+2547|\+2541|2547|2541)\d{8}$/.test(cleaned)) {
-      setMessage("Please enter a valid Safaricom number e.g. 0712 345 678");
+      setMessage("Please enter a valid Safaricom number e.g. 0712345678");
       return;
     }
 
