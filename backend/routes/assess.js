@@ -2,6 +2,8 @@
  * CFFR Assessment Route
  * POST /api/assess  — receives answers, returns 3 career recommendations
  * GET  /api/health  — confirms the API is running
+ *
+ * UPDATED: Saves student record to export store after every successful assessment.
  */
 
 const express = require("express");
@@ -9,7 +11,7 @@ const router  = express.Router();
 const { runCFFRAssessment, validateAnswers } = require("../engine/scorer");
 
 // ─── POST /api/assess ─────────────────────────────────────────────────────────
-router.post("/assess", (req, res) => {
+router.post("/assess", async (req, res) => {
   try {
     const { answers } = req.body;
 
@@ -26,7 +28,36 @@ router.post("/assess", (req, res) => {
     // 2. Run the CFFR scoring engine
     const result = runCFFRAssessment(answers);
 
-    // 3. Send back the recommendations
+    // 3. Save record for export (fire and forget — don't block the response)
+    try {
+      const exportRouter = require("./export");
+      // Directly call the save logic via internal HTTP-like approach
+      const { recommendations } = result;
+      const savePayload = { answers, recommendations };
+
+      // Use a simple internal fetch to the save endpoint
+      const http    = require("http");
+      const data    = JSON.stringify(savePayload);
+      const options = {
+        hostname: "localhost",
+        port:     process.env.PORT || 4000,
+        path:     "/api/export/save",
+        method:   "POST",
+        headers:  {
+          "Content-Type":   "application/json",
+          "Content-Length": Buffer.byteLength(data),
+        },
+      };
+      const saveReq = http.request(options);
+      saveReq.on("error", (e) => console.warn("[CFFR] Record save warning:", e.message));
+      saveReq.write(data);
+      saveReq.end();
+    } catch (saveErr) {
+      // Never block assessment results if saving fails
+      console.warn("[CFFR] Could not save record:", saveErr.message);
+    }
+
+    // 4. Send back the recommendations
     return res.status(200).json(result);
 
   } catch (err) {

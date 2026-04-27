@@ -9,7 +9,8 @@ const helmet       = require("helmet");
 const cors         = require("cors");
 const rateLimit    = require("express-rate-limit");
 const assessRouter = require("./routes/assess");
-const payRouter    = require("./routes/pay");      // ← NEW: Mpesa payment route
+const payRouter    = require("./routes/pay");
+const exportRouter = require("./routes/export");   // ← NEW
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -42,7 +43,7 @@ app.use(cors({
     }
   },
   methods:              ["GET", "POST", "OPTIONS"],
-  allowedHeaders:       ["Content-Type"],
+  allowedHeaders:       ["Content-Type", "x-export-secret"],
   optionsSuccessStatus: 200,
 }));
 
@@ -66,8 +67,9 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: false, limit: "10kb" }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use("/api", assessRouter);
-app.use("/api/pay", payRouter);    // ← NEW: Mpesa routes
+app.use("/api",        assessRouter);
+app.use("/api/pay",    payRouter);
+app.use("/api/export", exportRouter);   // ← NEW
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -75,11 +77,12 @@ app.get("/", (_req, res) => {
     name:        "CFFR API",
     description: "Career Fit & Future Readiness — Kenya CBC Career Guidance Engine",
     endpoints: {
-      health:      "GET  /api/health",
-      assess:      "POST /api/assess",
-      pay:         "POST /api/pay",
-      payCallback: "POST /api/pay/callback",
-      payStatus:   "GET  /api/pay/status/:checkoutId",
+      health:        "GET  /api/health",
+      assess:        "POST /api/assess",
+      pay:           "POST /api/pay",
+      payCallback:   "POST /api/pay/callback",
+      payStatus:     "GET  /api/pay/status/:checkoutId",
+      exportRecords: "GET  /api/export/records",
     },
   });
 });
@@ -109,6 +112,7 @@ app.listen(PORT, () => {
   ║  Health check       → GET  /api/health               ║
   ║  Assessment         → POST /api/assess               ║
   ║  Mpesa Pay          → POST /api/pay                  ║
+  ║  Export Records     → GET  /api/export/records       ║
   ╚══════════════════════════════════════════════════════╝
   `);
   console.log("[CFFR] Allowed origins:", allowedOrigins);
