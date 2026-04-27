@@ -7,7 +7,7 @@
 const QUESTIONS = [
   {
     id: "q1", number: 1, type: "multi", maxPicks: 3,
-    question: "Which subjects did you enjoy the most in school?",
+    question: "Which subjects do you enjoy the most in school?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
@@ -28,7 +28,7 @@ const QUESTIONS = [
   },
   {
     id: "q2", number: 2, type: "multi", maxPicks: 3,
-    question: "Which subjects did you perform best in?",
+    question: "Which subjects do you perform best in?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
@@ -100,11 +100,11 @@ const QUESTIONS = [
     question: "Which of these areas sounds most exciting to you as a future career space?",
     hint: "Pick up to 3.",
     options: [
-      { label: "Artificial Intelligence, Data & Technology",     value: "ai_data_technology" },
       { label: "Climate Change, Renewable Energy & Environment", value: "climate_renewable_energy" },
       { label: "Healthcare, Medicine & Mental Health",           value: "healthcare_medicine_mental_health" },
       { label: "Digital Media, Content Creation & Design",       value: "digital_media_content_design" },
       { label: "Modern Agribusiness & Food Technology",          value: "modern_agribusiness_food_tech" },
+      { label: "Artificial Intelligence, Data & Technology",     value: "ai_data_technology" },
       { label: "Finance, Banking & Entrepreneurship",            value: "finance_banking_entrepreneurship" },
       { label: "Law, Policy & Governance",                       value: "law_policy_governance" },
       { label: "Education & Community Development",              value: "education_community_development" },
