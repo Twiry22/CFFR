@@ -155,7 +155,7 @@ const Welcome = ({ onStart }) => {
           color:     "var(--text-light)",
           fontFamily:"var(--font-body)",
         }}>
-          © 2026 CFFR · Career Fit & Future Readiness · Kenya
+          © 2026 CFFR · ProjectData Hub · Kenya
         </p>
       </footer>
 
