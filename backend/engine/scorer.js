@@ -295,7 +295,7 @@ function generateFitExplanation(answers, cluster) {
     cutting_edge:                "Your appetite for cutting-edge work is exactly what this cluster demands.",
     tech_human_connection:       "Your desire to blend technology with human connection is a growing strength in this field.",
     work_within_community:       "Your focus on local community impact is well-matched here.",
-    prefer_established:          "This is one of Kenya's most established career tracks — aligning with your preference for stability.",
+    prefer_established:          "This is one of Kenya's most established career tracks, aligning with your preference for stability.",
   };
   const mindsetPicks = Array.isArray(answers.q8) ? answers.q8 : answers.q8 ? [answers.q8] : [];
   const matchedMindset = mindsetPicks.find((m) => cluster.futureMindsetKeys?.includes(m));
@@ -451,11 +451,11 @@ function runCFFRAssessment(answers) {
     ...(studentProfile.exploratoryProfile && {
       alternateRecommendations,
       exploratoryNote:
-        "You selected two options for some questions — that tells us you're still exploring, and that's perfectly normal. " +
+        "You selected two options for some questions; that tells us you're still exploring and that's perfectly normal. " +
         "Below are your top 3 career paths based on your full profile, plus 3 additional paths worth considering as you learn more about yourself.",
     }),
     disclaimer:
-      "CFFR is a directional tool, not a final verdict. Your interests will grow and change — consider retaking this assessment at key points in your education to see how your profile evolves.",
+      "CFFR is a directional tool, not a final verdict. Your interests will grow and change, therefore consider retaking this assessment at key points in your education to see how your profile evolves.",
     generatedAt: new Date().toISOString(),
   };
 }

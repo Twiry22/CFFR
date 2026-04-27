@@ -22,7 +22,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 85,
     threeYearOutlook:
       "Kenya's tech sector is expanding rapidly. Roles in AI, data science, and cybersecurity are among the fastest-growing globally and locally. The government's Digital Economy Blueprint and Konza Techno City are actively creating structured demand.",
-    futureGrowthLabel: "🔥 Very High Growth",
+    futureGrowthLabel: "Very High Growth",
     careers: [
       "Software Engineer",
       "Data Analyst",
@@ -56,13 +56,13 @@ const CAREER_CLUSTERS = {
     name: "Health & Human Sciences",
     tagline: "Heal, support and transform lives",
     description:
-      "Kenya faces a critical shortage of healthcare workers – there is one doctor for every 10,000 Kenyans. This cluster includes medicine, nursing, clinical science, mental health, pharmacy, nutrition, and public health.",
+      "Kenya faces a critical shortage of healthcare workers, there is one doctor for every 10,000 Kenyans. This cluster includes medicine, nursing, clinical science, mental health, pharmacy, nutrition, and public health.",
     sssPathway: "Pure Sciences",
     futureRelevanceIndex: 85,
     marketDemandIndex: 92,
     threeYearOutlook:
       "Post-pandemic investment in Kenya's health system is accelerating. Mental health awareness is rising, and the Universal Health Coverage (UHC) rollout under the Social Health Authority is creating thousands of new healthcare jobs across all 47 counties.",
-    futureGrowthLabel: "📈 High Growth",
+    futureGrowthLabel: "High Growth",
     careers: [
       "Medical Doctor",
       "Clinical Officer",
@@ -97,7 +97,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 88,
     threeYearOutlook:
       "Kenya's Vision 2030 infrastructure agenda and the affordable housing programme are driving strong demand for engineers. Renewable energy projects (solar, wind, geothermal) also require electrical and mechanical engineers.",
-    futureGrowthLabel: "📈 High Growth",
+    futureGrowthLabel: "High Growth",
     careers: [
       "Civil Engineer",
       "Electrical Engineer",
@@ -131,7 +131,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 75,
     threeYearOutlook:
       "Kenya's green economy is being supercharged by carbon credit markets, the Africa Climate Summit, and multi-billion donor-funded conservation projects. The shift to electric vehicles and solar energy is creating new technical roles across the country.",
-    futureGrowthLabel: "🌿 Very High Growth",
+    futureGrowthLabel: "Very High Growth",
     careers: [
       "Environmental Scientist",
       "Renewable Energy Technologist",
@@ -170,7 +170,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 68,
     threeYearOutlook:
       "Kenya's creative sector is expanding, especially in digital content, Afrofusion music, and film. The rise of social media and global streaming platforms has opened real income streams for creative Kenyans. Competition is high but opportunities are global.",
-    futureGrowthLabel: "🎨 Growing",
+    futureGrowthLabel: "Growing",
     careers: [
       "Graphic & Brand Designer",
       "Film Director / Cinematographer",
@@ -209,7 +209,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 80,
     threeYearOutlook:
       "Fintech continues to disrupt traditional banking in Kenya, creating roles at the intersection of finance and technology. Entrepreneurship support ecosystems are maturing. Accounting and audit remain stable, high-paying professions.",
-    futureGrowthLabel: "💼 Stable with Tech Disruption",
+    futureGrowthLabel: "Stable with Tech Disruption",
     careers: [
       "Accountant / CPA",
       "Financial Analyst",
@@ -244,7 +244,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 70,
     threeYearOutlook:
       "Devolution has increased demand for skilled county government workers. The NGO and development sector remains one of Kenya's largest employers. Law, especially in areas of tech regulation, land rights, and human rights, is growing.",
-    futureGrowthLabel: "⚖️ Steady Demand",
+    futureGrowthLabel: "Steady Demand",
     careers: [
       "Lawyer / Advocate",
       "Teacher / Educator",
@@ -279,7 +279,7 @@ const CAREER_CLUSTERS = {
     marketDemandIndex: 78,
     threeYearOutlook:
       "AgriTech is one of Kenya's most exciting emerging sectors. Drone spraying, soil analytics, mobile apps for farmers, and cold chain logistics are creating entirely new job categories. Kenya is a major global exporter of tea, coffee, and horticulture.",
-    futureGrowthLabel: "🌾 High Growth",
+    futureGrowthLabel: "High Growth",
     careers: [
       "Agronomist",
       "Food Scientist",
