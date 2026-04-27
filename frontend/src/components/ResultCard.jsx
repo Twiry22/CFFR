@@ -11,17 +11,17 @@ const RANK_STYLES = {
   1: {
     borderTop: "4px solid var(--royal-blue)",
     badge:     { background: "var(--royal-blue)", color: "var(--white)" },
-    label:     "🥇 Best Match",
+    label:     "Best Match",
   },
   2: {
     borderTop: "4px solid var(--royal-blue-light)",
     badge:     { background: "var(--royal-blue-light)", color: "var(--white)" },
-    label:     "🥈 Strong Match",
+    label:     "Strong Match",
   },
   3: {
     borderTop: "4px solid var(--border)",
     badge:     { background: "var(--royal-blue-pale)", color: "var(--royal-blue)" },
-    label:     "🥉 Good Match",
+    label:     "Good Match",
   },
 };
 
@@ -38,7 +38,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
     : (RANK_STYLES[recommendation.rank] || RANK_STYLES[3]);
 
   const badgeLabel = isAlternate
-    ? `🔍 Alternate Path #${recommendation.rank - 3}`
+    ? `Alternate Path #${recommendation.rank - 3}`
     : style.label;
 
   return (
@@ -242,7 +242,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
               textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
-              🔭 Kenya Outlook 2026–2029
+             Kenya Outlook 2026–2029
             </p>
             <p style={{
               fontSize:           "0.9rem",

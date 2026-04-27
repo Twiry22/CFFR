@@ -92,7 +92,7 @@ const TrialBanner = () => {
         color:       "#ffffff",
         letterSpacing: "0.02em",
       }}>
-         FREE TRIAL — Full access ends in:
+      FREE TRIAL — Full access ends in:
       </span>
 
       {/* Countdown */}

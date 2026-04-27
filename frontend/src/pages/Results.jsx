@@ -85,8 +85,8 @@ const Results = ({ result, onRetake }) => {
               lineHeight: "1.7",
             }}>
               {studentProfile.exploratoryProfile
-                ? "You're still exploring, and that's a great place to be. Here are your top 3 career directions, plus 3 more worth considering."
-                : "Based on your answers, here are the 3 career directions that best match your profile and Kenya's 3-year outlook."}
+                ? "Here are your top 3 career directions, plus 3 more worth considering. Remember you're still exploring, and that's a great place to be."
+                : "Based on your answers, below are the 3 career directions that best match your profile and Kenya's 3-year outlook."}
             </p>
           </div>
 
@@ -203,7 +203,7 @@ const Results = ({ result, onRetake }) => {
         textAlign: "center",
       }}>
         <p style={{ fontSize: "0.75rem", color: "var(--text-light)" }}>
-          © 2026 CFFR · Career Fit & Future Readiness · Kenya
+          © 2026 CFFR · ProjectData Hub · Kenya
         </p>
       </footer>
 

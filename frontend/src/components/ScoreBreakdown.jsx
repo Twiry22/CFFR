@@ -46,14 +46,6 @@ const ScoreBreakdown = ({ scoreBreakdown }) => {
                   color:      "var(--text-dark)",
                 }}>
                   {meta.emoji} {meta.label}
-                  <span style={{
-                    marginLeft: "6px",
-                    fontSize:   "0.75rem",
-                    color:      "var(--text-light)",
-                    fontWeight: "400",
-                  }}>
-                    ({meta.weight})
-                  </span>
                 </span>
                 <span style={{
                   fontFamily: "var(--font-display)",
