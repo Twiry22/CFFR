@@ -1,11 +1,11 @@
 /**
- * CFFR Scoring Engine  v2.0
+ * CFFR Scoring Engine  v2.1
  * ─────────────────────────────────────────────────────────────────────────────
  * VARIABLE WEIGHTS:
  *   Market Demand     25%
  *   Future Relevance  25%
- *   Aptitude          20%
- *   Interest          20%
+ *   Aptitude          25%
+ *   Interest          15%
  *   Accessibility     10%
  *
  * v2.0 CAREER SPECIFICITY UPDATE:
@@ -16,6 +16,12 @@
  *   ALTERNATE recommendations (3 careers, shown if dual-pick on Q4):
  *     — 1 specific career picked from each of the top 3 clusters
  *     — Career chosen by matching student's SECONDARY personality (Q4 pick 2)
+ *
+ * FIX v2.1 — Personality-subject alignment gate added to calcAptitudeScore:
+ *   Subject points from Q2 are halved when the student's personality picks
+ *   have zero match (primary or secondary) with a cluster. This prevents
+ *   high-demand clusters from ranking in the top 3 purely on subject overlap
+ *   when the student's personality is completely misaligned with that cluster.
  */
 
 const { getClusterIds, getCluster, pickCareerFromCluster } = require("./careers");
@@ -139,10 +145,25 @@ function calcInterestScore(answers, cluster) {
 function calcAptitudeScore(answers, cluster) {
   let points = 0;
 
+  // ── Personality alignment check ───────────────────────────────────────────
+  // Determines whether Q2 subject points count fully or are halved.
+  // A student whose personality has zero overlap with a cluster should not
+  // be pushed into it purely by subject affinity.
+  const personalityPicks   = Array.isArray(answers.q4) ? answers.q4 : answers.q4 ? [answers.q4] : [];
+  const hasPrimaryMatch    = personalityPicks.includes(cluster.personalityKey);
+  const hasSecondaryMatch  = personalityPicks.some((p) =>
+    SECONDARY_PERSONALITY[cluster.id]?.includes(p)
+  );
+  const hasAnyPersonalityMatch = hasPrimaryMatch || hasSecondaryMatch;
+
+  // ── Q2 subject points — halved when personality is fully misaligned ───────
   (answers.q2 || []).forEach((subject) => {
-    if (SUBJECT_CLUSTER_AFFINITY[subject]?.includes(cluster.id)) points += 11;
+    if (SUBJECT_CLUSTER_AFFINITY[subject]?.includes(cluster.id)) {
+      points += hasAnyPersonalityMatch ? 11 : 5;
+    }
   });
 
+  // ── Personality points ────────────────────────────────────────────────────
   toWeightedPicks(answers.q4, 2).forEach(([personality, weight]) => {
     if (personality === cluster.personalityKey) {
       points += Math.round(30 * weight);
@@ -151,6 +172,7 @@ function calcAptitudeScore(answers, cluster) {
     }
   });
 
+  // ── Tech readiness bonus ──────────────────────────────────────────────────
   const q6Level = parseInt(answers.q6, 10) || 1;
   if (cluster.isTechCluster)        points += Math.round((q6Level / 5) * 37);
   else if (cluster.isHealthCluster) points += Math.round((q6Level / 5) * 20);
@@ -286,15 +308,15 @@ function generateStudentProfile(answers) {
     environmental_caring:  "Purpose-Driven Changemaker",
   };
   const techReadinessMap = { 1: "Low", 2: "Basic", 3: "Moderate", 4: "Confident", 5: "Very High" };
-  const q6Level          = parseInt(answers.q6, 10) || 1;
+  const q6Level            = parseInt(answers.q6, 10) || 1;
   const primaryPersonality = Array.isArray(answers.q4) ? answers.q4[0] : answers.q4;
   const hasSecondaryPersonality = Array.isArray(answers.q4) && answers.q4.length === 2;
 
   return {
-    personalityType:        personalityMap[primaryPersonality] || "Curious Learner",
-    techReadiness:          techReadinessMap[q6Level] || "Moderate",
-    subjectBreadth:         (answers.q1 || []).length > 2 ? "Broad" : "Focused",
-    academicAlignment:      (answers.q1 || []).length > 0 && (answers.q2 || []).length > 0
+    personalityType:   personalityMap[primaryPersonality] || "Curious Learner",
+    techReadiness:     techReadinessMap[q6Level] || "Moderate",
+    subjectBreadth:    (answers.q1 || []).length > 2 ? "Broad" : "Focused",
+    academicAlignment: (answers.q1 || []).length > 0 && (answers.q2 || []).length > 0
       ? "Interest and aptitude are aligned"
       : "Interests slightly ahead of current performance",
     hasSecondaryPersonality,
@@ -319,8 +341,8 @@ function runCFFRAssessment(answers) {
     const total =
       marketDemand    * 0.25 +
       futureRelevance * 0.25 +
-      aptitude        * 0.20 +
-      interest        * 0.20 +
+      aptitude        * 0.25 +
+      interest        * 0.15 +
       accessibility   * 0.10;
 
     results.push({
@@ -343,17 +365,17 @@ function runCFFRAssessment(answers) {
   const recommendations = top3.map((r, idx) => {
     const specificCareer = pickCareerFromCluster(r.cluster, primaryPersonality);
     return {
-      rank:              idx + 1,
+      rank:               idx + 1,
       specificCareer,
-      clusterId:         r.cluster.id,
-      clusterName:       r.cluster.name,
-      tagline:           r.cluster.tagline,
-      sssPathway:        r.cluster.sssPathway,
-      futureGrowthLabel: r.cluster.futureGrowthLabel,
-      threeYearOutlook:  r.cluster.threeYearOutlook,
-      matchScore:        r.scores.total,
-      scoreBreakdown:    r.scores,
-      whyItFitsYou:      generateFitExplanation(answers, r.cluster, specificCareer),
+      clusterId:          r.cluster.id,
+      clusterName:        r.cluster.name,
+      tagline:            r.cluster.tagline,
+      sssPathway:         r.cluster.sssPathway,
+      futureGrowthLabel:  r.cluster.futureGrowthLabel,
+      threeYearOutlook:   r.cluster.threeYearOutlook,
+      matchScore:         r.scores.total,
+      scoreBreakdown:     r.scores,
+      whyItFitsYou:       generateFitExplanation(answers, r.cluster, specificCareer),
       recommendedSchools: r.schools,
     };
   });
@@ -364,17 +386,17 @@ function runCFFRAssessment(answers) {
     alternateRecommendations = top3.map((r, idx) => {
       const specificCareer = pickCareerFromCluster(r.cluster, secondaryPersonality);
       return {
-        rank:              idx + 4,
+        rank:               idx + 4,
         specificCareer,
-        clusterId:         r.cluster.id,
-        clusterName:       r.cluster.name,
-        tagline:           r.cluster.tagline,
-        sssPathway:        r.cluster.sssPathway,
-        futureGrowthLabel: r.cluster.futureGrowthLabel,
-        threeYearOutlook:  r.cluster.threeYearOutlook,
-        matchScore:        r.scores.total,
-        scoreBreakdown:    r.scores,
-        whyItFitsYou:      generateFitExplanation(answers, r.cluster, specificCareer),
+        clusterId:          r.cluster.id,
+        clusterName:        r.cluster.name,
+        tagline:            r.cluster.tagline,
+        sssPathway:         r.cluster.sssPathway,
+        futureGrowthLabel:  r.cluster.futureGrowthLabel,
+        threeYearOutlook:   r.cluster.threeYearOutlook,
+        matchScore:         r.scores.total,
+        scoreBreakdown:     r.scores,
+        whyItFitsYou:       generateFitExplanation(answers, r.cluster, specificCareer),
         recommendedSchools: r.schools,
       };
     });
@@ -391,7 +413,8 @@ function runCFFRAssessment(answers) {
         "Your top 3 are based on your primary personality. The 3 below reflect your second personality and are also worth exploring.",
     }),
     disclaimer:
-      "CFFR is a directional tool, not a final verdict. Your interests will grow and change, thereforeconsider retaking this assessment at key points in your education.",
+      "CFFR is a directional tool, not a final verdict. Your interests will grow and change, " +
+      "therefore consider retaking this assessment at key points in your education.",
     generatedAt: new Date().toISOString(),
   };
 }
