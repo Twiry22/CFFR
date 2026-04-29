@@ -65,7 +65,7 @@ const QUESTIONS = [
       { label: "I love asking why and figuring out how things work",              value: "curious_analytical" },
       { label: "I express myself best through art, music, writing or performance",value: "creative_expressive" },
       { label: "I enjoy talking to people, listening and helping them",           value: "caring_social" },
-      { label: "I'd rather do it with my hands than read about it in a book",    value: "hands_on_practical" },
+      { label: "I prefer practical work over theoretical study",                  value: "hands_on_practical" },
       { label: "I like making plans, setting goals and keeping things organised", value: "organized_goal_setter" },
       { label: "I care deeply about the environment and the world around me",     value: "environmental_caring" },
     ],
