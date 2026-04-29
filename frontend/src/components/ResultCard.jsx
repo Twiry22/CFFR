@@ -1,6 +1,10 @@
 /**
- * ResultCard Component  v1.1
+ * ResultCard Component  v1.2
  * Supports ranks 1–3 (primary) and ranks 4–6 (alternate / exploratory).
+ *
+ * UPDATE v1.2: Headline now shows specificCareer (e.g. "Software Engineer")
+ * instead of clusterName (e.g. "Technology & Data").
+ * clusterName is shown as a smaller subtitle below the career title.
  */
 
 import { useState } from "react";
@@ -38,7 +42,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
     : (RANK_STYLES[recommendation.rank] || RANK_STYLES[3]);
 
   const badgeLabel = isAlternate
-    ? `Alternate Path #${recommendation.rank - 3}`
+    ? `Also Worth Exploring #${recommendation.rank - 3}`
     : style.label;
 
   return (
@@ -86,7 +90,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
           </span>
         </div>
 
-        {/* Name + tagline */}
+        {/* ── UPDATED: specificCareer as headline, clusterName + tagline as subtitle ── */}
         <h2 style={{
           fontFamily:   "var(--font-display)",
           fontSize:     "clamp(1.3rem, 3vw, 1.7rem)",
@@ -94,8 +98,16 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
           color:        "var(--text-dark)",
           marginBottom: "4px",
         }}>
-          {recommendation.clusterName}
+          {recommendation.specificCareer}
         </h2>
+        <p style={{
+          fontSize:     "0.82rem",
+          color:        "var(--text-light)",
+          fontWeight:   "500",
+          marginBottom: "4px",
+        }}>
+          {recommendation.clusterName}
+        </p>
         <p style={{
           fontSize:     "0.92rem",
           color:        "var(--royal-blue)",
@@ -242,16 +254,16 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
               textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
-             Kenya Outlook 2026–2029
+              Kenya Outlook 2026–2029
             </p>
             <p style={{
-              fontSize:           "0.9rem",
-              color:              "var(--text-dark)",
-              lineHeight:         "1.6",
-              display:            "-webkit-box",
-              WebkitLineClamp:    "2",
-              WebkitBoxOrient:    "vertical",
-              overflow:           "hidden",
+              fontSize:        "0.9rem",
+              color:           "var(--text-dark)",
+              lineHeight:      "1.6",
+              display:         "-webkit-box",
+              WebkitLineClamp: "2",
+              WebkitBoxOrient: "vertical",
+              overflow:        "hidden",
             }}>
               {recommendation.threeYearOutlook}
             </p>
