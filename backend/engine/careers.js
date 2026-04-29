@@ -8,6 +8,8 @@
  * keys in scorer.js: "people_difference" | "solving_figuring" | "creating_building"
  * FIX v1.2: subjectInterest / subjectAptitude corrected to match SUBJECTS list
  * in scorer.js so subject-affinity scoring works correctly.
+ * UPDATE v1.3: Added pickCareerFromCluster — returns the most personality-matched
+ * specific career title from a cluster. Required by scorer.js v2.0.
  */
 
 const CAREER_CLUSTERS = {
@@ -36,7 +38,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["mathematics", "computer_studies"],
     subjectAptitude: ["mathematics", "computer_studies"],
-    // FIXED: was "computers_technology" — not a valid key in ACTIVITY_CLUSTER_AFFINITY
     activityKey: "solving_figuring",
     personalityKey: "curious_analytical",
     jobValueKey: "good_income",
@@ -76,7 +77,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["biology", "chemistry", "home_science"],
     subjectAptitude: ["biology", "chemistry"],
-    // FIXED: was "helping_caring"
     activityKey: "people_difference",
     personalityKey: "caring_social",
     jobValueKey: "making_difference",
@@ -110,7 +110,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["mathematics", "physics", "computer_studies"],
     subjectAptitude: ["mathematics", "physics"],
-    // FIXED: was "building_fixing"
     activityKey: "creating_building",
     personalityKey: "curious_analytical",
     jobValueKey: "building_creating",
@@ -144,7 +143,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["biology", "geography", "agriculture"],
     subjectAptitude: ["biology", "geography", "mathematics"],
-    // FIXED: was "nature_animals_food"
     activityKey: "solving_figuring",
     personalityKey: "environmental_caring",
     jobValueKey: "making_difference",
@@ -184,7 +182,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["art_design", "english", "computer_studies"],
     subjectAptitude: ["art_design", "english"],
-    // FIXED: was "creating_art"
     activityKey: "creating_building",
     personalityKey: "creative_expressive",
     jobValueKey: "creative_expression",
@@ -223,7 +220,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["mathematics", "business_studies", "english"],
     subjectAptitude: ["mathematics", "business_studies"],
-    // FIXED: was "organizing_leading"
     activityKey: "solving_figuring",
     personalityKey: "organized_goal_setter",
     jobValueKey: "good_income",
@@ -258,7 +254,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["english", "kiswahili", "history_government"],
     subjectAptitude: ["english", "history_government"],
-    // FIXED: was "communicating_teaching"
     activityKey: "people_difference",
     personalityKey: "caring_social",
     jobValueKey: "making_difference",
@@ -293,7 +288,6 @@ const CAREER_CLUSTERS = {
     ],
     subjectInterest: ["agriculture", "biology", "business_studies"],
     subjectAptitude: ["agriculture", "biology", "mathematics"],
-    // FIXED: was "nature_animals_food"
     activityKey: "people_difference",
     personalityKey: "environmental_caring",
     jobValueKey: "making_difference",
@@ -308,7 +302,98 @@ const CAREER_CLUSTERS = {
   },
 };
 
-const getClusterIds = () => Object.keys(CAREER_CLUSTERS);
-const getCluster = (id) => CAREER_CLUSTERS[id] || null;
+// ─── Cluster Helpers ──────────────────────────────────────────────────────────
 
-module.exports = { CAREER_CLUSTERS, getClusterIds, getCluster };
+const getClusterIds = () => Object.keys(CAREER_CLUSTERS);
+const getCluster   = (id) => CAREER_CLUSTERS[id] || null;
+
+// ─── Personality → Specific Career Map ───────────────────────────────────────
+// For each cluster, maps every personality type to the single most fitting
+// career title within that cluster. Used by pickCareerFromCluster().
+
+const CAREER_PERSONALITY_MAP = {
+  technology_data: {
+    curious_analytical:    "Software Engineer",
+    creative_expressive:   "UX/UI Designer",
+    organized_goal_setter: "IT Project Manager",
+    hands_on_practical:    "Systems Administrator",
+    caring_social:         "IT Project Manager",
+    environmental_caring:  "Cloud Engineer",
+  },
+  health_sciences: {
+    caring_social:         "Public Health Officer",
+    organized_goal_setter: "Pharmacist",
+    curious_analytical:    "Lab Scientist",
+    hands_on_practical:    "Physiotherapist",
+    creative_expressive:   "Nutritionist & Dietitian",
+    environmental_caring:  "Public Health Officer",
+  },
+  engineering_built: {
+    hands_on_practical:    "Civil Engineer",
+    curious_analytical:    "Electrical Engineer",
+    organized_goal_setter: "Construction Project Manager",
+    creative_expressive:   "Urban & Regional Planner",
+    caring_social:         "Quantity Surveyor",
+    environmental_caring:  "Renewable Energy Engineer",
+  },
+  green_economy: {
+    environmental_caring:  "Environmental Scientist",
+    curious_analytical:    "Climate Change Analyst",
+    hands_on_practical:    "Water Resource Engineer",
+    organized_goal_setter: "Sustainability Consultant",
+    creative_expressive:   "Environmental Lawyer",
+    caring_social:         "Conservation Officer",
+  },
+  creative_economy: {
+    creative_expressive:   "Graphic & Brand Designer",
+    curious_analytical:    "Game Developer",
+    hands_on_practical:    "Photographer",
+    caring_social:         "Journalist & Media Producer",
+    organized_goal_setter: "Architect",
+    environmental_caring:  "Digital Content Creator",
+  },
+  business_finance: {
+    organized_goal_setter: "Entrepreneur / Startup Founder",
+    curious_analytical:    "Financial Analyst",
+    caring_social:         "Human Resources Manager",
+    creative_expressive:   "Marketing & Brand Manager",
+    hands_on_practical:    "Supply Chain Manager",
+    environmental_caring:  "Fintech Specialist",
+  },
+  social_governance: {
+    caring_social:         "Community Development Officer",
+    organized_goal_setter: "Lawyer / Advocate",
+    creative_expressive:   "Journalist",
+    curious_analytical:    "Policy Analyst",
+    hands_on_practical:    "Social Worker",
+    environmental_caring:  "Human Rights Advocate",
+  },
+  agricultural_tech: {
+    environmental_caring:  "Agronomist",
+    hands_on_practical:    "Agricultural Engineer",
+    curious_analytical:    "Food Scientist",
+    caring_social:         "Veterinarian",
+    organized_goal_setter: "Agribusiness Manager",
+    creative_expressive:   "AgriTech Entrepreneur",
+  },
+};
+
+/**
+ * pickCareerFromCluster
+ * Returns the single best-fit career title from a cluster for a given personality.
+ * Falls back to the first career in the cluster list if no match is found.
+ *
+ * @param  {object} cluster     — a cluster object from CAREER_CLUSTERS
+ * @param  {string} personality — one of the 6 personality keys
+ * @returns {string}            — a specific career title
+ */
+function pickCareerFromCluster(cluster, personality) {
+  const map = CAREER_PERSONALITY_MAP[cluster.id];
+  if (map && personality && map[personality]) return map[personality];
+  // Fallback: first career in the cluster's careers array
+  return cluster.careers[0];
+}
+
+// ─── Exports ──────────────────────────────────────────────────────────────────
+
+module.exports = { CAREER_CLUSTERS, getClusterIds, getCluster, pickCareerFromCluster };
