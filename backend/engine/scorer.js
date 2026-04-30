@@ -1,11 +1,11 @@
 /**
- * CFFR Scoring Engine  v2.1
+ * CFFR Scoring Engine  v2.2
  * ─────────────────────────────────────────────────────────────────────────────
  * VARIABLE WEIGHTS:
  *   Market Demand     25%
  *   Future Relevance  25%
- *   Aptitude          25%
- *   Interest          15%
+ *   Aptitude          20%
+ *   Interest          20%
  *   Accessibility     10%
  *
  * v2.0 CAREER SPECIFICITY UPDATE:
@@ -17,11 +17,25 @@
  *     — 1 specific career picked from each of the top 3 clusters
  *     — Career chosen by matching student's SECONDARY personality (Q4 pick 2)
  *
- * FIX v2.1 — Personality-subject alignment gate added to calcAptitudeScore:
- *   Subject points from Q2 are halved when the student's personality picks
- *   have zero match (primary or secondary) with a cluster. This prevents
- *   high-demand clusters from ranking in the top 3 purely on subject overlap
- *   when the student's personality is completely misaligned with that cluster.
+ * FIX v2.1 — Personality-subject alignment gate in calcAptitudeScore:
+ *   Q2 subject points halved when student personality has zero match with
+ *   a cluster, preventing high-demand clusters ranking purely on subjects.
+ *
+ * FIX v2.2 — Aptitude confidence dampener applied to final total:
+ *   Market Demand and Future Relevance are fixed cluster constants —
+ *   they do not change per student. This meant a student with low aptitude
+ *   for a cluster could still rank it highly just because the cluster has
+ *   high market demand. The dampener multiplies the final total score by
+ *   a factor derived from aptitude:
+ *
+ *     aptitudeConfidence = 0.5 + (aptitude / 100) * 0.5
+ *
+ *   Range: aptitude 0 → multiplier 0.50 (score halved)
+ *          aptitude 50 → multiplier 0.75
+ *          aptitude 100 → multiplier 1.00 (no change)
+ *
+ *   Effect: clusters where the student has genuine aptitude are rewarded.
+ *   Clusters that only rank high due to market/future constants are pulled down.
  */
 
 const { getClusterIds, getCluster, pickCareerFromCluster } = require("./careers");
@@ -338,21 +352,38 @@ function runCFFRAssessment(answers) {
     const marketDemand    = calcMarketDemandScore(answers, cluster);
     const accessibility   = calcAccessibilityScore(answers, cluster);
 
-    const total =
+    // ── Raw weighted total ──────────────────────────────────────────────────
+    const rawTotal =
       marketDemand    * 0.25 +
       futureRelevance * 0.25 +
-      aptitude        * 0.25 +
-      interest        * 0.15 +
+      aptitude        * 0.20 +
+      interest        * 0.20 +
       accessibility   * 0.10;
+
+    // ── Aptitude confidence dampener (v2.2) ─────────────────────────────────
+    // Market Demand and Future Relevance are fixed cluster constants —
+    // they never change per student. Without this dampener, high-demand
+    // clusters always rank highly regardless of student aptitude.
+    // Formula: 0.5 + (aptitude / 100) * 0.5
+    //   aptitude   0 → multiplier 0.50 (score halved)
+    //   aptitude  50 → multiplier 0.75
+    //   aptitude 100 → multiplier 1.00 (no penalty)
+    const aptitudeConfidence = 0.5 + (aptitude / 100) * 0.5;
+    const total = Math.round(rawTotal * aptitudeConfidence);
 
     results.push({
       cluster,
-      scores: { interest, aptitude, futureRelevance, marketDemand, accessibility, total: Math.round(total) },
-      schools: getSchoolsForStudent(id, answers.q9, answers.q10),
+      scores: { interest, aptitude, futureRelevance, marketDemand, accessibility, total },
     });
   }
 
   results.sort((a, b) => b.scores.total - a.scores.total);
+
+  // Re-attach schools only for top results to avoid unnecessary DB calls
+  const resultsWithSchools = results.map((r) => ({
+    ...r,
+    schools: getSchoolsForStudent(r.cluster.id, answers.q9, answers.q10),
+  }));
 
   const studentProfile       = generateStudentProfile(answers);
   const allPersonalityPicks  = Array.isArray(answers.q4) ? answers.q4 : answers.q4 ? [answers.q4] : [];
@@ -360,7 +391,7 @@ function runCFFRAssessment(answers) {
   const secondaryPersonality = allPersonalityPicks[1] || null;
 
   // ── Top 3: 1 specific career per cluster, chosen by primary personality ─────
-  const top3 = results.slice(0, 3);
+  const top3 = resultsWithSchools.slice(0, 3);
 
   const recommendations = top3.map((r, idx) => {
     const specificCareer = pickCareerFromCluster(r.cluster, primaryPersonality);
@@ -467,13 +498,11 @@ function validateAnswers(answers) {
   if (!validBudgetTiers.includes(answers.q10)) errors.push("Q10: Please select an education budget range.");
 
   // Q11 — optional KCSE cluster points (skippable — value may be "skipped" or absent)
-  const validKcse = ["above_60","50_60","40_50","30_40","20_30","10_20","below_10","skipped"];
-  if (answers.q11 !== undefined && answers.q11 !== null && !validKcse.includes(answers.q11)) {
+  const validKcse = ["above_60", "50_60", "40_50", "30_40", "20_30", "10_20", "below_10", "skipped"];
+  if (answers.q11 !== undefined && answers.q11 !== null && !validKcse.includes(answers.q11))
     errors.push("Q11: Invalid KCSE cluster points selection.");
-  }
 
   return { valid: errors.length === 0, errors };
 }
 
 module.exports = { runCFFRAssessment, validateAnswers };
-
