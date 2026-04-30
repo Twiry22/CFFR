@@ -1,5 +1,5 @@
 /**
- * CFFR Scoring Engine  v2.2
+ * CFFR Scoring Engine  v2.3
  * ─────────────────────────────────────────────────────────────────────────────
  * VARIABLE WEIGHTS:
  *   Market Demand     25%
@@ -8,34 +8,37 @@
  *   Interest          20%
  *   Accessibility     10%
  *
- * v2.0 CAREER SPECIFICITY UPDATE:
- *   PRIMARY recommendations (3 careers):
- *     — 1 specific career picked from each of the top 3 clusters
- *     — Career chosen by matching student's PRIMARY personality (Q4 pick 1)
+ * v2.0 — Career specificity: 1 specific career per cluster per personality
+ * v2.1 — Personality-subject alignment gate in calcAptitudeScore
+ * v2.2 — Aptitude confidence dampener on final total
+ * v2.3 — Q11 (KCSE cluster points) now affects both Aptitude and Accessibility
  *
- *   ALTERNATE recommendations (3 careers, shown if dual-pick on Q4):
- *     — 1 specific career picked from each of the top 3 clusters
- *     — Career chosen by matching student's SECONDARY personality (Q4 pick 2)
+ * Q11 APTITUDE EFFECT:
+ *   KCSE cluster points are a real academic signal. High points boost aptitude
+ *   for clusters that match the student's personality/subjects. Low points
+ *   apply a small penalty. Skipped = neutral (no change).
  *
- * FIX v2.1 — Personality-subject alignment gate in calcAptitudeScore:
- *   Q2 subject points halved when student personality has zero match with
- *   a cluster, preventing high-demand clusters ranking purely on subjects.
+ *   above_60 → +15 pts   50_60 → +10 pts   40_50 → +6 pts
+ *   30_40    → +3 pts    20_30 →  0 pts     10_20 → -3 pts
+ *   below_10 → -5 pts    skipped/absent → 0 pts (neutral)
  *
- * FIX v2.2 — Aptitude confidence dampener applied to final total:
- *   Market Demand and Future Relevance are fixed cluster constants —
- *   they do not change per student. This meant a student with low aptitude
- *   for a cluster could still rank it highly just because the cluster has
- *   high market demand. The dampener multiplies the final total score by
- *   a factor derived from aptitude:
+ *   The bonus/penalty only applies when the student has ANY personality
+ *   match with the cluster — we don't reward high KCSE points for a cluster
+ *   the student is fundamentally misaligned with.
  *
- *     aptitudeConfidence = 0.5 + (aptitude / 100) * 0.5
+ * Q11 ACCESSIBILITY EFFECT:
+ *   High cluster points open up more university options (higher accessibility).
+ *   Low cluster points make TVET clusters more accessible and university
+ *   clusters less so.
  *
- *   Range: aptitude 0 → multiplier 0.50 (score halved)
- *          aptitude 50 → multiplier 0.75
- *          aptitude 100 → multiplier 1.00 (no change)
- *
- *   Effect: clusters where the student has genuine aptitude are rewarded.
- *   Clusters that only rank high due to market/future constants are pulled down.
+ *   above_60 → accessibilityBonus +15 (universities wide open)
+ *   50_60    → +10
+ *   40_50    → +5
+ *   30_40    → 0  (neutral)
+ *   20_30    → TVET clusters +10, university clusters -10
+ *   10_20    → TVET clusters +15, university clusters -20
+ *   below_10 → TVET clusters +20, university clusters -30
+ *   skipped/absent → 0 (neutral)
  */
 
 const { getClusterIds, getCluster, pickCareerFromCluster } = require("./careers");
@@ -74,6 +77,28 @@ const CAREER_SPACES  = [
 const FUTURE_MINDSETS = [
   "keep_learning", "prefer_established", "work_online_internationally",
   "work_within_community", "tech_human_connection", "cutting_edge",
+];
+
+// ─── Q11 Lookup Tables ────────────────────────────────────────────────────────
+
+// How much Q11 adds/subtracts from aptitude (when personality is aligned)
+const KCSE_APTITUDE_BONUS = {
+  above_60: 15,
+  "50_60":  10,
+  "40_50":   6,
+  "30_40":   3,
+  "20_30":   0,
+  "10_20":  -3,
+  below_10: -5,
+  skipped:   0,
+};
+
+// TVET-friendly clusters — lower points students are guided here
+const TVET_CLUSTERS = ["technology_data", "engineering_built", "agricultural_tech", "creative_economy"];
+
+// University-heavy clusters — require higher points to access well
+const UNIVERSITY_CLUSTERS = [
+  "health_sciences", "business_finance", "social_governance", "green_economy",
 ];
 
 // ─── Subject to Cluster Affinity ─────────────────────────────────────────────
@@ -160,9 +185,6 @@ function calcAptitudeScore(answers, cluster) {
   let points = 0;
 
   // ── Personality alignment check ───────────────────────────────────────────
-  // Determines whether Q2 subject points count fully or are halved.
-  // A student whose personality has zero overlap with a cluster should not
-  // be pushed into it purely by subject affinity.
   const personalityPicks   = Array.isArray(answers.q4) ? answers.q4 : answers.q4 ? [answers.q4] : [];
   const hasPrimaryMatch    = personalityPicks.includes(cluster.personalityKey);
   const hasSecondaryMatch  = personalityPicks.some((p) =>
@@ -192,7 +214,15 @@ function calcAptitudeScore(answers, cluster) {
   else if (cluster.isHealthCluster) points += Math.round((q6Level / 5) * 20);
   else                              points += Math.round((q6Level / 5) * 12);
 
-  return Math.min(points, 100);
+  // ── Q11 KCSE cluster points bonus (v2.3) ─────────────────────────────────
+  // Only applied when student has at least some personality alignment with
+  // this cluster — high KCSE points shouldn't boost a misaligned cluster.
+  if (hasAnyPersonalityMatch) {
+    const kcseBonus = KCSE_APTITUDE_BONUS[answers.q11] ?? 0;
+    points += kcseBonus;
+  }
+
+  return Math.min(Math.max(points, 0), 100);
 }
 
 function calcFutureRelevanceScore(answers, cluster) {
@@ -230,15 +260,41 @@ function calcMarketDemandScore(answers, cluster) {
 function calcAccessibilityScore(answers, cluster) {
   const geoScore    = getGeographicAccessibilityScore(answers.q9);
   const budgetScore = getBudgetScore(answers.q10);
-  const raw         = budgetScore * 0.6 + geoScore * 0.4;
+  let raw           = budgetScore * 0.6 + geoScore * 0.4;
 
+  // ── Base budget cap for very low budgets ──────────────────────────────────
   if (answers.q10 === "under_30k") {
-    const tvetClusters = ["technology_data", "engineering_built", "agricultural_tech", "creative_economy"];
-    return tvetClusters.includes(cluster.id)
-      ? Math.min(Math.round(raw + 10), 50)
-      : Math.min(Math.round(raw), 40);
+    const tvetBoost = TVET_CLUSTERS.includes(cluster.id) ? 10 : 0;
+    raw = Math.min(Math.round(raw + tvetBoost), 50);
   }
-  return Math.min(Math.round(raw), 100);
+
+  // ── Q11 KCSE cluster points effect on accessibility (v2.3) ───────────────
+  const q11 = answers.q11;
+  let kcseAccessibilityAdjustment = 0;
+
+  if (q11 && q11 !== "skipped") {
+    if (q11 === "above_60") {
+      // Top performers — all doors open
+      kcseAccessibilityAdjustment = 15;
+    } else if (q11 === "50_60") {
+      kcseAccessibilityAdjustment = 10;
+    } else if (q11 === "40_50") {
+      kcseAccessibilityAdjustment = 5;
+    } else if (q11 === "30_40") {
+      // Neutral — no adjustment
+      kcseAccessibilityAdjustment = 0;
+    } else if (q11 === "20_30") {
+      // TVET clusters become more accessible, universities less so
+      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 10 : -10;
+    } else if (q11 === "10_20") {
+      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 15 : -20;
+    } else if (q11 === "below_10") {
+      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 20 : -30;
+    }
+  }
+
+  const finalScore = Math.round(raw + kcseAccessibilityAdjustment);
+  return Math.min(Math.max(finalScore, 0), 100);
 }
 
 // ─── Fit Explanation ──────────────────────────────────────────────────────────
@@ -361,13 +417,8 @@ function runCFFRAssessment(answers) {
       accessibility   * 0.10;
 
     // ── Aptitude confidence dampener (v2.2) ─────────────────────────────────
-    // Market Demand and Future Relevance are fixed cluster constants —
-    // they never change per student. Without this dampener, high-demand
-    // clusters always rank highly regardless of student aptitude.
-    // Formula: 0.5 + (aptitude / 100) * 0.5
-    //   aptitude   0 → multiplier 0.50 (score halved)
-    //   aptitude  50 → multiplier 0.75
-    //   aptitude 100 → multiplier 1.00 (no penalty)
+    // Prevents high market/future constants from overriding low aptitude.
+    // aptitude 0 → ×0.50 | aptitude 50 → ×0.75 | aptitude 100 → ×1.00
     const aptitudeConfidence = 0.5 + (aptitude / 100) * 0.5;
     const total = Math.round(rawTotal * aptitudeConfidence);
 
@@ -379,7 +430,7 @@ function runCFFRAssessment(answers) {
 
   results.sort((a, b) => b.scores.total - a.scores.total);
 
-  // Re-attach schools only for top results to avoid unnecessary DB calls
+  // Attach schools after sorting
   const resultsWithSchools = results.map((r) => ({
     ...r,
     schools: getSchoolsForStudent(r.cluster.id, answers.q9, answers.q10),
@@ -411,7 +462,7 @@ function runCFFRAssessment(answers) {
     };
   });
 
-  // ── Alternates: same top 3 clusters, careers chosen by secondary personality ─
+  // ── Alternates: same top 3 clusters, careers chosen by secondary personality─
   let alternateRecommendations = [];
   if (studentProfile.hasSecondaryPersonality && secondaryPersonality) {
     alternateRecommendations = top3.map((r, idx) => {
@@ -497,7 +548,7 @@ function validateAnswers(answers) {
   const validBudgetTiers = ["under_30k", "30k_80k", "80k_150k", "150k_300k", "over_300k", "scholarships"];
   if (!validBudgetTiers.includes(answers.q10)) errors.push("Q10: Please select an education budget range.");
 
-  // Q11 — optional KCSE cluster points (skippable — value may be "skipped" or absent)
+  // Q11 — optional KCSE cluster points (skippable)
   const validKcse = ["above_60", "50_60", "40_50", "30_40", "20_30", "10_20", "below_10", "skipped"];
   if (answers.q11 !== undefined && answers.q11 !== null && !validKcse.includes(answers.q11))
     errors.push("Q11: Invalid KCSE cluster points selection.");
