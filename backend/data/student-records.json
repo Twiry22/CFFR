@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cffr_1777582067863",
+    "timestamp": "2026-04-30T20:47:47.863Z",
+    "answers": {
+      "q1": [
+        "chemistry",
+        "cre_ire",
+        "business_studies"
+      ],
+      "q2": [
+        "chemistry",
+        "business_studies",
+        "english"
+      ],
+      "q3": [
+        "solving_figuring"
+      ],
+      "q4": [
+        "hands_on_practical",
+        "curious_analytical"
+      ],
+      "q5": [
+        "building_creating",
+        "leadership_decisions"
+      ],
+      "q6": "3",
+      "q7": [
+        "healthcare_medicine_mental_health",
+        "law_policy_governance"
+      ],
+      "q8": [
+        "prefer_established",
+        "work_within_community"
+      ],
+      "q9": "Kiambu",
+      "q10": "80k_150k",
+      "q11": "skipped"
+    },
+    "recommendations": [
+      {
+        "rank": 1,
+        "clusterName": "Health & Human Sciences",
+        "matchScore": 66
+      },
+      {
+        "rank": 2,
+        "clusterName": "Engineering & Built Environment",
+        "matchScore": 62
+      },
+      {
+        "rank": 3,
+        "clusterName": "Social Sciences, Law & Governance",
+        "matchScore": 58
+      }
+    ]
+  }
+]

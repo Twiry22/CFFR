@@ -1,110 +1,133 @@
 /**
- * CFFR Mpesa Payment Route
- * POST /api/pay        — initiates STK Push to student's phone
- * POST /api/pay/callback — Safaricom calls this after payment
- * GET  /api/pay/status/:checkoutId — frontend polls this to confirm payment
+ * CFFR Pesapal Payment Route  v2.0
+ * ─────────────────────────────────────────────────────────────────────────────
+ * POST /api/pay/initiate     — creates Pesapal order, returns redirect URL
+ * GET  /api/pay/callback     — Pesapal redirects student here after payment
+ * GET  /api/pay/status/:ref  — frontend polls this to confirm payment
  */
 
 const express = require("express");
 const axios   = require("axios");
 const router  = express.Router();
 
-// ─── Your Mpesa Credentials ───────────────────────────────────────────────────
-// Store ALL of these in your Render environment variables — never hardcode them.
+// ─── Credentials — set ALL of these in Render environment variables ───────────
+// ***NEVER hardcode real credentials here***
 
-const CONSUMER_KEY     = process.env.MPESA_CONSUMER_KEY;      // ***YOUR_CONSUMER_KEY***
-const CONSUMER_SECRET  = process.env.MPESA_CONSUMER_SECRET;   // ***YOUR_CONSUMER_SECRET***
-const TILL_NUMBER      = process.env.MPESA_TILL_NUMBER;        // ***YOUR_TILL_NUMBER***
-const CALLBACK_URL     = process.env.MPESA_CALLBACK_URL;       // ***https://cffr-backend.onrender.com/api/pay/callback***
-const AMOUNT           = 100;                                   // KES 100 per assessment
+const CONSUMER_KEY    = process.env.PESAPAL_CONSUMER_KEY;     // ***YOUR_PESAPAL_CONSUMER_KEY***
+const CONSUMER_SECRET = process.env.PESAPAL_CONSUMER_SECRET;  // ***YOUR_PESAPAL_CONSUMER_SECRET***
+const CALLBACK_URL    = process.env.PESAPAL_CALLBACK_URL;      // ***https://cffr-backend.onrender.com/api/pay/callback***
+const AMOUNT          = 100;
+const CURRENCY        = "KES";
 
-// Daraja endpoints — switch to production URLs when going live
-const IS_PRODUCTION    = process.env.MPESA_ENV === "production";
-const DARAJA_BASE      = IS_PRODUCTION
-  ? "https://api.safaricom.co.ke"
-  : "https://sandbox.safaricom.co.ke";
+// Sandbox vs Production — set PESAPAL_ENV=production in Render when going live
+const IS_PRODUCTION = process.env.PESAPAL_ENV === "production";
+const PESAPAL_BASE  = IS_PRODUCTION
+  ? "https://pay.pesapal.com/v3"
+  : "https://cybqa.pesapal.com/pesapalv3";
 
-// ─── In-memory payment store ──────────────────────────────────────────────────
-// Stores payment status keyed by CheckoutRequestID.
-// For production at scale, replace with a database (MongoDB, PostgreSQL etc.)
-const paymentStore = {};
+// ─── In-memory order store ────────────────────────────────────────────────────
+// Keyed by our internal order reference
+const orderStore = {};
 
-// ─── Helper: Get OAuth Token ──────────────────────────────────────────────────
-const getAccessToken = async () => {
-  const credentials = Buffer.from(`${CONSUMER_KEY}:${CONSUMER_SECRET}`).toString("base64");
-  const response = await axios.get(`${DARAJA_BASE}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${credentials}` },
-  });
-  return response.data.access_token;
+// ─── Helper: Get Pesapal Auth Token ──────────────────────────────────────────
+const getAuthToken = async () => {
+  const response = await axios.post(
+    `${PESAPAL_BASE}/api/Auth/RequestToken`,
+    {
+      consumer_key:    CONSUMER_KEY,
+      consumer_secret: CONSUMER_SECRET,
+    },
+    { headers: { "Content-Type": "application/json", Accept: "application/json" } }
+  );
+  return response.data.token;
 };
 
-// ─── Helper: Format phone number ─────────────────────────────────────────────
-// Converts 07XXXXXXXX or +2547XXXXXXXX → 2547XXXXXXXX
-const formatPhone = (phone) => {
-  const cleaned = phone.replace(/\s+/g, "").replace(/^\+/, "");
-  if (cleaned.startsWith("0")) return `254${cleaned.slice(1)}`;
-  return cleaned;
+// ─── Helper: Register IPN (do once per deployment) ───────────────────────────
+// IPN = Instant Payment Notification — Pesapal calls this URL when payment status changes
+let cachedIpnId = process.env.PESAPAL_IPN_ID || null;
+
+const registerIpn = async (token) => {
+  if (cachedIpnId) return cachedIpnId;
+
+  const response = await axios.post(
+    `${PESAPAL_BASE}/api/URLSetup/RegisterIPN`,
+    {
+      url:          CALLBACK_URL,
+      ipn_notification_type: "GET",
+    },
+    {
+      headers: {
+        Authorization:  `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept:         "application/json",
+      },
+    }
+  );
+  cachedIpnId = response.data.ipn_id;
+  console.log("[CFFR Pay] IPN registered:", cachedIpnId);
+  return cachedIpnId;
 };
 
-// ─── POST /api/pay ────────────────────────────────────────────────────────────
-// Initiates STK Push — sends payment prompt to student's phone
-router.post("/", async (req, res) => {
-  const { phone } = req.body;
+// ─── POST /api/pay/initiate ───────────────────────────────────────────────────
+// Creates a Pesapal order and returns the hosted payment page URL.
+// Frontend redirects student to this URL.
+router.post("/initiate", async (req, res) => {
+  const { phone, email, firstName, lastName } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({ success: false, message: "Phone number is required." });
-  }
-
-  const formattedPhone = formatPhone(phone);
-  if (!/^2547\d{8}$/.test(formattedPhone)) {
-    return res.status(400).json({ success: false, message: "Please enter a valid Safaricom number." });
+  if (!phone && !email) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide a phone number or email address.",
+    });
   }
 
   try {
-    const token     = await getAccessToken();
-    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
+    const token  = await getAuthToken();
+    const ipnId  = await registerIpn(token);
+    const ref    = `CFFR-${Date.now()}`; // unique order reference
 
-    // For Buy Goods (Till), BusinessShortCode = your Till Number
-    // Password = base64(TillNumber + Passkey + Timestamp)
-    // Passkey is provided by Safaricom on the Daraja portal
-    const PASSKEY   = process.env.MPESA_PASSKEY; // ***YOUR_PASSKEY_FROM_DARAJA_PORTAL***
-    const password  = Buffer.from(`${TILL_NUMBER}${PASSKEY}${timestamp}`).toString("base64");
-
-    const stkResponse = await axios.post(
-      `${DARAJA_BASE}/mpesa/stkpush/v1/processrequest`,
-      {
-        BusinessShortCode: TILL_NUMBER,
-        Password:          password,
-        Timestamp:         timestamp,
-        TransactionType:   "CustomerBuyGoodsOnline",  // Buy Goods Till
-        Amount:            AMOUNT,
-        PartyA:            formattedPhone,             // Student's phone
-        PartyB:            TILL_NUMBER,                // Your till
-        PhoneNumber:       formattedPhone,
-        CallBackURL:       CALLBACK_URL,
-        AccountReference:  "CFFR Assessment",
-        TransactionDesc:   "Career Assessment Fee",
+    const orderPayload = {
+      id:                    ref,
+      currency:              CURRENCY,
+      amount:                AMOUNT,
+      description:           "CFFR Career Assessment Fee",
+      callback_url:          `${CALLBACK_URL}?ref=${ref}`,
+      notification_id:       ipnId,
+      billing_address: {
+        phone_number:  phone   || "",
+        email_address: email   || "",
+        first_name:    firstName || "Student",
+        last_name:     lastName  || "User",
       },
-      { headers: { Authorization: `Bearer ${token}` } }
+    };
+
+    const orderResponse = await axios.post(
+      `${PESAPAL_BASE}/api/Transactions/SubmitOrderRequest`,
+      orderPayload,
+      {
+        headers: {
+          Authorization:  `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept:         "application/json",
+        },
+      }
     );
 
-    const { CheckoutRequestID, ResponseCode, CustomerMessage } = stkResponse.data;
+    const { order_tracking_id, redirect_url } = orderResponse.data;
 
-    if (ResponseCode !== "0") {
-      return res.status(400).json({ success: false, message: CustomerMessage || "Payment initiation failed." });
-    }
+    // Store order as pending
+    orderStore[ref] = { status: "pending", trackingId: order_tracking_id };
 
-    // Store as pending
-    paymentStore[CheckoutRequestID] = { status: "pending", phone: formattedPhone };
+    console.log(`[CFFR Pay] Order created: ${ref} → ${order_tracking_id}`);
 
     return res.status(200).json({
-      success:           true,
-      checkoutRequestId: CheckoutRequestID,
-      message:           "Check your phone and enter your Mpesa PIN to complete payment.",
+      success:     true,
+      redirectUrl: redirect_url,   // frontend opens this URL
+      orderRef:    ref,
     });
 
   } catch (err) {
-    console.error("[CFFR Pay] STK Push error:", err.response?.data || err.message);
+    console.error("[CFFR Pay] Initiate error:", err.response?.data || err.message);
     return res.status(500).json({
       success: false,
       message: "Could not initiate payment. Please try again.",
@@ -112,48 +135,56 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ─── POST /api/pay/callback ───────────────────────────────────────────────────
-// Safaricom calls this URL automatically after the student pays or cancels.
-// Must be publicly accessible — your Render URL handles this.
-router.post("/callback", (req, res) => {
+// ─── GET /api/pay/callback ────────────────────────────────────────────────────
+// Pesapal redirects student here after payment (success or failure).
+// We check the transaction status and update our store.
+router.get("/callback", async (req, res) => {
+  const { OrderTrackingId, OrderMerchantReference, OrderNotificationType } = req.query;
+  const ref = req.query.ref || OrderMerchantReference;
+
   try {
-    const body   = req.body?.Body?.stkCallback;
-    const id     = body?.CheckoutRequestID;
-    const code   = body?.ResultCode;
+    const token = await getAuthToken();
 
-    if (!id) return res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+    const statusResponse = await axios.get(
+      `${PESAPAL_BASE}/api/Transactions/GetTransactionStatus?orderTrackingId=${OrderTrackingId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept:        "application/json",
+        },
+      }
+    );
 
-    if (code === 0) {
-      // Payment successful
-      paymentStore[id] = { status: "paid" };
-      console.log(`[CFFR Pay] Payment confirmed for ${id}`);
+    const { payment_status_description, status_code } = statusResponse.data;
+
+    // status_code 1 = COMPLETED
+    if (status_code === 1 || payment_status_description === "Completed") {
+      if (orderStore[ref]) orderStore[ref].status = "paid";
+      console.log(`[CFFR Pay] Payment confirmed: ${ref}`);
+      // Redirect student back to frontend with success flag
+      const frontendUrl = process.env.FRONTEND_URL || "https://cffr.projectdatahub.org";
+      return res.redirect(`${frontendUrl}?payment=success&ref=${ref}`);
     } else {
-      // Payment failed or cancelled
-      paymentStore[id] = { status: "failed", reason: body?.ResultDesc };
-      console.log(`[CFFR Pay] Payment failed for ${id}: ${body?.ResultDesc}`);
+      if (orderStore[ref]) orderStore[ref].status = "failed";
+      const frontendUrl = process.env.FRONTEND_URL || "https://cffr.projectdatahub.org";
+      return res.redirect(`${frontendUrl}?payment=failed&ref=${ref}`);
     }
 
-    // Always return 200 to Safaricom
-    return res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
-
   } catch (err) {
-    console.error("[CFFR Pay] Callback error:", err.message);
-    return res.status(200).json({ ResultCode: 0, ResultDesc: "Accepted" });
+    console.error("[CFFR Pay] Callback error:", err.response?.data || err.message);
+    const frontendUrl = process.env.FRONTEND_URL || "https://cffr.projectdatahub.org";
+    return res.redirect(`${frontendUrl}?payment=failed`);
   }
 });
 
-// ─── GET /api/pay/status/:checkoutId ─────────────────────────────────────────
-// Frontend polls this every 3 seconds to check if payment went through
-router.get("/status/:checkoutId", (req, res) => {
-  const { checkoutId } = req.params;
-  const record = paymentStore[checkoutId];
-
-  if (!record) {
+// ─── GET /api/pay/status/:ref ─────────────────────────────────────────────────
+// Frontend polls this to check if payment went through
+router.get("/status/:ref", (req, res) => {
+  const order = orderStore[req.params.ref];
+  if (!order) {
     return res.status(404).json({ success: false, status: "not_found" });
   }
-
-  return res.status(200).json({ success: true, status: record.status });
+  return res.status(200).json({ success: true, status: order.status });
 });
 
 module.exports = router;
-module.exports.paymentStore = paymentStore;

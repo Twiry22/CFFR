@@ -466,7 +466,14 @@ function validateAnswers(answers) {
   const validBudgetTiers = ["under_30k", "30k_80k", "80k_150k", "150k_300k", "over_300k", "scholarships"];
   if (!validBudgetTiers.includes(answers.q10)) errors.push("Q10: Please select an education budget range.");
 
+  // Q11 — optional KCSE cluster points (skippable — value may be "skipped" or absent)
+  const validKcse = ["above_60","50_60","40_50","30_40","20_30","10_20","below_10","skipped"];
+  if (answers.q11 !== undefined && answers.q11 !== null && !validKcse.includes(answers.q11)) {
+    errors.push("Q11: Invalid KCSE cluster points selection.");
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
 module.exports = { runCFFRAssessment, validateAnswers };
+
