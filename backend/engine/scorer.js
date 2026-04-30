@@ -1,5 +1,5 @@
 /**
- * CFFR Scoring Engine  v2.3
+ * CFFR Scoring Engine  v2.4
  * ─────────────────────────────────────────────────────────────────────────────
  * VARIABLE WEIGHTS:
  *   Market Demand     25%
@@ -11,34 +11,21 @@
  * v2.0 — Career specificity: 1 specific career per cluster per personality
  * v2.1 — Personality-subject alignment gate in calcAptitudeScore
  * v2.2 — Aptitude confidence dampener on final total
- * v2.3 — Q11 (KCSE cluster points) now affects both Aptitude and Accessibility
+ * v2.3 — Q11 (KCSE cluster points) affects both Aptitude and Accessibility
+ * v2.4 — Dampener floor raised from 0.50 to 0.72
+ *         New range: aptitude 0 → ×0.72 | aptitude 100 → ×1.00
+ *         Typical score range: 48–95
+ *         Strong matches: 70–95 | Average: 55–70 | Weak: 48–55
  *
  * Q11 APTITUDE EFFECT:
- *   KCSE cluster points are a real academic signal. High points boost aptitude
- *   for clusters that match the student's personality/subjects. Low points
- *   apply a small penalty. Skipped = neutral (no change).
- *
  *   above_60 → +15 pts   50_60 → +10 pts   40_50 → +6 pts
  *   30_40    → +3 pts    20_30 →  0 pts     10_20 → -3 pts
- *   below_10 → -5 pts    skipped/absent → 0 pts (neutral)
- *
- *   The bonus/penalty only applies when the student has ANY personality
- *   match with the cluster — we don't reward high KCSE points for a cluster
- *   the student is fundamentally misaligned with.
+ *   below_10 → -5 pts    skipped/absent → 0 pts
+ *   Only applied when student has personality alignment with the cluster.
  *
  * Q11 ACCESSIBILITY EFFECT:
- *   High cluster points open up more university options (higher accessibility).
- *   Low cluster points make TVET clusters more accessible and university
- *   clusters less so.
- *
- *   above_60 → accessibilityBonus +15 (universities wide open)
- *   50_60    → +10
- *   40_50    → +5
- *   30_40    → 0  (neutral)
- *   20_30    → TVET clusters +10, university clusters -10
- *   10_20    → TVET clusters +15, university clusters -20
- *   below_10 → TVET clusters +20, university clusters -30
- *   skipped/absent → 0 (neutral)
+ *   High points → all clusters more accessible (+5 to +15)
+ *   Low points  → TVET clusters boosted, university clusters penalised
  */
 
 const { getClusterIds, getCluster, pickCareerFromCluster } = require("./careers");
@@ -81,24 +68,19 @@ const FUTURE_MINDSETS = [
 
 // ─── Q11 Lookup Tables ────────────────────────────────────────────────────────
 
-// How much Q11 adds/subtracts from aptitude (when personality is aligned)
 const KCSE_APTITUDE_BONUS = {
-  above_60: 15,
-  "50_60":  10,
-  "40_50":   6,
-  "30_40":   3,
-  "20_30":   0,
-  "10_20":  -3,
-  below_10: -5,
-  skipped:   0,
+  above_60:  15,
+  "50_60":   10,
+  "40_50":    6,
+  "30_40":    3,
+  "20_30":    0,
+  "10_20":   -3,
+  below_10:  -5,
+  skipped:    0,
 };
 
-// TVET-friendly clusters — lower points students are guided here
-const TVET_CLUSTERS = ["technology_data", "engineering_built", "agricultural_tech", "creative_economy"];
-
-// University-heavy clusters — require higher points to access well
-const UNIVERSITY_CLUSTERS = [
-  "health_sciences", "business_finance", "social_governance", "green_economy",
+const TVET_CLUSTERS = [
+  "technology_data", "engineering_built", "agricultural_tech", "creative_economy",
 ];
 
 // ─── Subject to Cluster Affinity ─────────────────────────────────────────────
@@ -137,14 +119,14 @@ const ACTIVITY_CLUSTER_AFFINITY = {
 // ─── Secondary Personality Affinity ──────────────────────────────────────────
 
 const SECONDARY_PERSONALITY = {
-  technology_data:   ["hands_on_practical",    "organized_goal_setter"],
-  health_sciences:   ["organized_goal_setter",  "environmental_caring"],
-  engineering_built: ["hands_on_practical",     "curious_analytical"],
-  green_economy:     ["curious_analytical",     "hands_on_practical"],
-  creative_economy:  ["curious_analytical",     "hands_on_practical"],
-  business_finance:  ["curious_analytical",     "caring_social"],
-  social_governance: ["organized_goal_setter",  "creative_expressive"],
-  agricultural_tech: ["hands_on_practical",     "curious_analytical"],
+  technology_data:   ["hands_on_practical",   "organized_goal_setter"],
+  health_sciences:   ["organized_goal_setter", "environmental_caring"],
+  engineering_built: ["hands_on_practical",    "curious_analytical"],
+  green_economy:     ["curious_analytical",    "hands_on_practical"],
+  creative_economy:  ["curious_analytical",    "hands_on_practical"],
+  business_finance:  ["curious_analytical",    "caring_social"],
+  social_governance: ["organized_goal_setter", "creative_expressive"],
+  agricultural_tech: ["hands_on_practical",    "curious_analytical"],
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
@@ -185,9 +167,9 @@ function calcAptitudeScore(answers, cluster) {
   let points = 0;
 
   // ── Personality alignment check ───────────────────────────────────────────
-  const personalityPicks   = Array.isArray(answers.q4) ? answers.q4 : answers.q4 ? [answers.q4] : [];
-  const hasPrimaryMatch    = personalityPicks.includes(cluster.personalityKey);
-  const hasSecondaryMatch  = personalityPicks.some((p) =>
+  const personalityPicks  = Array.isArray(answers.q4) ? answers.q4 : answers.q4 ? [answers.q4] : [];
+  const hasPrimaryMatch   = personalityPicks.includes(cluster.personalityKey);
+  const hasSecondaryMatch = personalityPicks.some((p) =>
     SECONDARY_PERSONALITY[cluster.id]?.includes(p)
   );
   const hasAnyPersonalityMatch = hasPrimaryMatch || hasSecondaryMatch;
@@ -214,9 +196,9 @@ function calcAptitudeScore(answers, cluster) {
   else if (cluster.isHealthCluster) points += Math.round((q6Level / 5) * 20);
   else                              points += Math.round((q6Level / 5) * 12);
 
-  // ── Q11 KCSE cluster points bonus (v2.3) ─────────────────────────────────
-  // Only applied when student has at least some personality alignment with
-  // this cluster — high KCSE points shouldn't boost a misaligned cluster.
+  // ── Q11 KCSE cluster points bonus ────────────────────────────────────────
+  // Only applied when personality is aligned — high KCSE points should not
+  // boost a cluster the student is fundamentally misaligned with.
   if (hasAnyPersonalityMatch) {
     const kcseBonus = KCSE_APTITUDE_BONUS[answers.q11] ?? 0;
     points += kcseBonus;
@@ -250,7 +232,9 @@ function calcFutureRelevanceScore(answers, cluster) {
 
 function calcMarketDemandScore(answers, cluster) {
   let score = cluster.marketDemandIndex;
-  const highDemandClusters = ["business_finance", "engineering_built", "technology_data", "health_sciences"];
+  const highDemandClusters = [
+    "business_finance", "engineering_built", "technology_data", "health_sciences",
+  ];
   const jobValuePicks = Array.isArray(answers.q5) ? answers.q5 : answers.q5 ? [answers.q5] : [];
   if (jobValuePicks.includes("good_income") && highDemandClusters.includes(cluster.id))
     score = Math.min(score + 8, 100);
@@ -268,33 +252,21 @@ function calcAccessibilityScore(answers, cluster) {
     raw = Math.min(Math.round(raw + tvetBoost), 50);
   }
 
-  // ── Q11 KCSE cluster points effect on accessibility (v2.3) ───────────────
+  // ── Q11 KCSE cluster points effect on accessibility ───────────────────────
   const q11 = answers.q11;
-  let kcseAccessibilityAdjustment = 0;
+  let kcseAdjustment = 0;
 
   if (q11 && q11 !== "skipped") {
-    if (q11 === "above_60") {
-      // Top performers — all doors open
-      kcseAccessibilityAdjustment = 15;
-    } else if (q11 === "50_60") {
-      kcseAccessibilityAdjustment = 10;
-    } else if (q11 === "40_50") {
-      kcseAccessibilityAdjustment = 5;
-    } else if (q11 === "30_40") {
-      // Neutral — no adjustment
-      kcseAccessibilityAdjustment = 0;
-    } else if (q11 === "20_30") {
-      // TVET clusters become more accessible, universities less so
-      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 10 : -10;
-    } else if (q11 === "10_20") {
-      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 15 : -20;
-    } else if (q11 === "below_10") {
-      kcseAccessibilityAdjustment = TVET_CLUSTERS.includes(cluster.id) ? 20 : -30;
-    }
+    if      (q11 === "above_60") kcseAdjustment = 15;
+    else if (q11 === "50_60")    kcseAdjustment = 10;
+    else if (q11 === "40_50")    kcseAdjustment = 5;
+    else if (q11 === "30_40")    kcseAdjustment = 0;
+    else if (q11 === "20_30")    kcseAdjustment = TVET_CLUSTERS.includes(cluster.id) ?  10 : -10;
+    else if (q11 === "10_20")    kcseAdjustment = TVET_CLUSTERS.includes(cluster.id) ?  15 : -20;
+    else if (q11 === "below_10") kcseAdjustment = TVET_CLUSTERS.includes(cluster.id) ?  20 : -30;
   }
 
-  const finalScore = Math.round(raw + kcseAccessibilityAdjustment);
-  return Math.min(Math.max(finalScore, 0), 100);
+  return Math.min(Math.max(Math.round(raw + kcseAdjustment), 0), 100);
 }
 
 // ─── Fit Explanation ──────────────────────────────────────────────────────────
@@ -303,15 +275,24 @@ function generateFitExplanation(answers, cluster, specificCareer) {
   const parts = [];
 
   const subjectLabels = {
-    mathematics: "Mathematics", biology: "Biology", chemistry: "Chemistry",
-    physics: "Physics", history_government: "History & Government",
-    geography: "Geography", cre_ire: "CRE / IRE",
-    business_studies: "Business Studies", agriculture: "Agriculture",
-    computer_studies: "Computer Studies", home_science: "Home Science",
-    art_design: "Art & Design", english: "English", kiswahili: "Kiswahili",
-    integrated_science: "Integrated Science",
+    mathematics:           "Mathematics",
+    biology:               "Biology",
+    chemistry:             "Chemistry",
+    physics:               "Physics",
+    history_government:    "History & Government",
+    geography:             "Geography",
+    cre_ire:               "CRE / IRE",
+    business_studies:      "Business Studies",
+    agriculture:           "Agriculture",
+    computer_studies:      "Computer Studies",
+    home_science:          "Home Science",
+    art_design:            "Art & Design",
+    english:               "English",
+    kiswahili:             "Kiswahili",
+    integrated_science:    "Integrated Science",
     agriculture_nutrition: "Agriculture & Nutrition",
-    creative_arts: "Creative Arts", computer_ict: "Computer Science / ICT",
+    creative_arts:         "Creative Arts",
+    computer_ict:          "Computer Science / ICT",
   };
 
   const matchedSubjects = (answers.q1 || []).filter(
@@ -337,7 +318,9 @@ function generateFitExplanation(answers, cluster, specificCareer) {
     environmental_caring:  "your deep care for the environment and community",
   };
   if (personalityPicks.includes(cluster.personalityKey)) {
-    parts.push(`This role suits ${personalityDescriptions[cluster.personalityKey] || "your personality type"}.`);
+    parts.push(
+      `This role suits ${personalityDescriptions[cluster.personalityKey] || "your personality type"}.`
+    );
   }
 
   const mindsetMessages = {
@@ -348,8 +331,8 @@ function generateFitExplanation(answers, cluster, specificCareer) {
     work_within_community:       "Your focus on local community impact is well-matched to this career.",
     prefer_established:          "This is one of Kenya's most established career tracks.",
   };
-  const mindsetPicks = Array.isArray(answers.q8) ? answers.q8 : answers.q8 ? [answers.q8] : [];
-  const matchedMindset = mindsetPicks.find((m) => cluster.futureMindsetKeys?.includes(m));
+  const mindsetPicks    = Array.isArray(answers.q8) ? answers.q8 : answers.q8 ? [answers.q8] : [];
+  const matchedMindset  = mindsetPicks.find((m) => cluster.futureMindsetKeys?.includes(m));
   if (matchedMindset && mindsetMessages[matchedMindset]) parts.push(mindsetMessages[matchedMindset]);
 
   const aptitudeSubjects = (answers.q2 || []).filter(
@@ -361,7 +344,9 @@ function generateFitExplanation(answers, cluster, specificCareer) {
   }
 
   if (parts.length === 0)
-    parts.push(`Based on your overall profile, becoming a ${specificCareer} is a strong direction worth exploring.`);
+    parts.push(
+      `Based on your overall profile, becoming a ${specificCareer} is a strong direction worth exploring.`
+    );
 
   return parts.slice(0, 3).join(" ");
 }
@@ -377,9 +362,9 @@ function generateStudentProfile(answers) {
     organized_goal_setter: "Strategic Leader",
     environmental_caring:  "Purpose-Driven Changemaker",
   };
-  const techReadinessMap = { 1: "Low", 2: "Basic", 3: "Moderate", 4: "Confident", 5: "Very High" };
-  const q6Level            = parseInt(answers.q6, 10) || 1;
-  const primaryPersonality = Array.isArray(answers.q4) ? answers.q4[0] : answers.q4;
+  const techReadinessMap        = { 1: "Low", 2: "Basic", 3: "Moderate", 4: "Confident", 5: "Very High" };
+  const q6Level                 = parseInt(answers.q6, 10) || 1;
+  const primaryPersonality      = Array.isArray(answers.q4) ? answers.q4[0] : answers.q4;
   const hasSecondaryPersonality = Array.isArray(answers.q4) && answers.q4.length === 2;
 
   return {
@@ -416,10 +401,12 @@ function runCFFRAssessment(answers) {
       interest        * 0.20 +
       accessibility   * 0.10;
 
-    // ── Aptitude confidence dampener (v2.2) ─────────────────────────────────
-    // Prevents high market/future constants from overriding low aptitude.
-    // aptitude 0 → ×0.50 | aptitude 50 → ×0.75 | aptitude 100 → ×1.00
-    const aptitudeConfidence = 0.5 + (aptitude / 100) * 0.5;
+    // ── Aptitude confidence dampener (v2.4) ─────────────────────────────────
+    // Floor raised to 0.72 for a natural score range of ~48–95.
+    // Strong matches: 70–95 | Average: 55–70 | Weak: 48–55
+    // The two constants must always sum to 1.0:
+    //   0.72 + 0.28 = 1.00 ✓
+    const aptitudeConfidence = 0.72 + (aptitude / 100) * 0.28;
     const total = Math.round(rawTotal * aptitudeConfidence);
 
     results.push({
@@ -430,7 +417,8 @@ function runCFFRAssessment(answers) {
 
   results.sort((a, b) => b.scores.total - a.scores.total);
 
-  // Attach schools after sorting
+  // Attach schools after sorting — only computed for all clusters
+  // (schools.js is fast so this is fine)
   const resultsWithSchools = results.map((r) => ({
     ...r,
     schools: getSchoolsForStudent(r.cluster.id, answers.q9, answers.q10),
@@ -492,7 +480,8 @@ function runCFFRAssessment(answers) {
       alternateRecommendations,
       exploratoryNote:
         "You selected two personality types; so we found careers that fit both sides of you. " +
-        "Your top 3 are based on your primary personality. The 3 below reflect your second personality and are also worth exploring.",
+        "Your top 3 are based on your primary personality. The 3 below reflect your second personality " +
+        "and are also worth exploring.",
     }),
     disclaimer:
       "CFFR is a directional tool, not a final verdict. Your interests will grow and change, " +
@@ -545,11 +534,16 @@ function validateAnswers(answers) {
   if (!answers.q9 || typeof answers.q9 !== "string" || answers.q9.trim() === "")
     errors.push("Q9: Please select your school county.");
 
-  const validBudgetTiers = ["under_30k", "30k_80k", "80k_150k", "150k_300k", "over_300k", "scholarships"];
-  if (!validBudgetTiers.includes(answers.q10)) errors.push("Q10: Please select an education budget range.");
+  const validBudgetTiers = [
+    "under_30k", "30k_80k", "80k_150k", "150k_300k", "over_300k", "scholarships",
+  ];
+  if (!validBudgetTiers.includes(answers.q10))
+    errors.push("Q10: Please select an education budget range.");
 
   // Q11 — optional KCSE cluster points (skippable)
-  const validKcse = ["above_60", "50_60", "40_50", "30_40", "20_30", "10_20", "below_10", "skipped"];
+  const validKcse = [
+    "above_60", "50_60", "40_50", "30_40", "20_30", "10_20", "below_10", "skipped",
+  ];
   if (answers.q11 !== undefined && answers.q11 !== null && !validKcse.includes(answers.q11))
     errors.push("Q11: Invalid KCSE cluster points selection.");
 
