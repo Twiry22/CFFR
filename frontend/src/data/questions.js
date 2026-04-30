@@ -1,13 +1,12 @@
 /**
- * CFFR Questions  v1.2
- * Q3, Q4, Q5, Q8 → type "dual" (1 or 2 picks)
- * Q9 → type "county" (searchable dropdown)
+ * CFFR Questions  v2.0
+ * Q11 added — KCSE cluster points range (optional)
  */
 
 const QUESTIONS = [
   {
     id: "q1", number: 1, type: "multi", maxPicks: 3,
-    question: "Which subjects do you enjoy the most in school?",
+    question: "Which subjects did you enjoy the most in school?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
@@ -28,7 +27,7 @@ const QUESTIONS = [
   },
   {
     id: "q2", number: 2, type: "multi", maxPicks: 3,
-    question: "Which subjects do you perform best in?",
+    question: "Which subjects did you perform best in?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
@@ -165,6 +164,23 @@ const QUESTIONS = [
       { label: "KES 150,000 – 300,000 per year",                      value: "150k_300k" },
       { label: "More than KES 300,000 per year",                      value: "over_300k" },
       { label: "I am not sure / I would like to explore scholarships", value: "scholarships" },
+    ],
+  },
+
+  // ── Q11: KCSE Cluster Points (optional) ────────────────────────────────────
+  {
+    id: "q11", number: 11, type: "kcse", maxPicks: 1,
+    question: "Have you sat your KCSE? If yes, what were your cluster points?",
+    hint: "This helps us suggest schools that match your qualification. Skip if you haven't sat KCSE yet.",
+    skippable: true,   // ← tells Assessment.jsx to show the Skip button
+    options: [
+      { label: "Above 60 points",    value: "above_60",  universities: true,  tvet: false },
+      { label: "50 – 60 points",     value: "50_60",     universities: true,  tvet: false },
+      { label: "40 – 50 points",     value: "40_50",     universities: true,  tvet: false },
+      { label: "30 – 40 points",     value: "30_40",     universities: true,  tvet: false },
+      { label: "20 – 30 points",     value: "20_30",     universities: false, tvet: true  },
+      { label: "10 – 20 points",     value: "10_20",     universities: false, tvet: true  },
+      { label: "Below 10 points",    value: "below_10",  universities: false, tvet: true  },
     ],
   },
 ];

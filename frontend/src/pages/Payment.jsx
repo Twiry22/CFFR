@@ -1,42 +1,80 @@
 /**
- * Payment.jsx
- * Shown before the assessment starts.
- * Student enters phone number → STK Push sent → polls for confirmation → proceeds.
+ * Payment.jsx  v2.0 — Pesapal
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Flow:
+ * 1. Student enters phone + optional email
+ * 2. Frontend calls /api/pay/initiate → gets Pesapal redirect URL
+ * 3. Student is redirected to Pesapal's hosted payment page
+ * 4. Student pays (Mpesa, Airtel, card, bank — their choice)
+ * 5. Pesapal redirects back to frontend with ?payment=success&ref=CFFR-xxx
+ * 6. Frontend detects success and proceeds to assessment
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
-const POLL_INTERVAL_MS = 3000;  // check every 3 seconds
-const POLL_MAX_TRIES   = 20;    // give up after 60 seconds
-
 const Payment = ({ onPaid }) => {
-  const [phone,   setPhone]   = useState("");
-  const [step,    setStep]    = useState("form");   // "form" | "waiting" | "error"
-  const [message, setMessage] = useState("");
+  const [phone,     setPhone]     = useState("");
+  const [email,     setEmail]     = useState("");
+  const [step,      setStep]      = useState("form");   // "form" | "redirecting" | "waiting" | "error"
+  const [message,   setMessage]   = useState("");
+  const [orderRef,  setOrderRef]  = useState(null);
 
-  // ── Initiate STK Push ───────────────────────────────────────────────────────
+  // ── Check if returning from Pesapal redirect ──────────────────────────────
+  useEffect(() => {
+    const params  = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    const ref     = params.get("ref");
+
+    if (payment === "success" && ref) {
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+      setStep("waiting");
+      setMessage("Payment confirmed! Loading your assessment...");
+      setTimeout(() => onPaid(), 1500);
+    } else if (payment === "failed") {
+      window.history.replaceState({}, "", window.location.pathname);
+      setStep("error");
+      setMessage("Payment was not completed. Please try again.");
+    }
+  }, []);
+
+  // ── Initiate payment ──────────────────────────────────────────────────────
   const handlePay = async () => {
-    const cleaned = phone.replace(/\s+/g, "");
-    if (!/^(07|01|\+2547|\+2541|2547|2541)\d{8}$/.test(cleaned)) {
-      setMessage("Please enter a valid Safaricom number e.g. 0712345678");
+    const cleanPhone = phone.replace(/\s+/g, "");
+    const cleanEmail = email.trim();
+
+    if (!cleanPhone && !cleanEmail) {
+      setMessage("Please enter your phone number or email address.");
       return;
     }
 
-    setStep("waiting");
-    setMessage("Sending payment request to your phone...");
+    if (cleanPhone && !/^(07|01|\+2547|\+2541|2547|2541)\d{8}$/.test(cleanPhone)) {
+      setMessage("Please enter a valid Kenyan phone number e.g. 0712 345 678");
+      return;
+    }
+
+    setStep("redirecting");
+    setMessage("Preparing your secure payment page...");
 
     try {
-      const res = await api.post("/api/pay", { phone: cleaned });
+      const res = await api.post("/api/pay/initiate", {
+        phone:     cleanPhone,
+        email:     cleanEmail,
+        firstName: "Student",
+        lastName:  "User",
+      });
+
       if (!res.data.success) {
         setStep("error");
-        setMessage(res.data.message || "Payment initiation failed. Please try again.");
+        setMessage(res.data.message || "Could not initiate payment. Please try again.");
         return;
       }
 
-      const checkoutId = res.data.checkoutRequestId;
-      setMessage("Check your phone and enter your Mpesa PIN ✅");
-      pollPaymentStatus(checkoutId);
+      setOrderRef(res.data.orderRef);
+
+      // Redirect student to Pesapal hosted payment page
+      window.location.href = res.data.redirectUrl;
 
     } catch (err) {
       setStep("error");
@@ -44,42 +82,13 @@ const Payment = ({ onPaid }) => {
     }
   };
 
-  // ── Poll backend until paid or failed ───────────────────────────────────────
-  const pollPaymentStatus = (checkoutId) => {
-    let tries = 0;
-
-    const interval = setInterval(async () => {
-      tries++;
-      try {
-        const res = await api.get(`/api/pay/status/${checkoutId}`);
-        const { status } = res.data;
-
-        if (status === "paid") {
-          clearInterval(interval);
-          setMessage("Payment confirmed! Loading your assessment...");
-          setTimeout(() => onPaid(), 1200);
-        } else if (status === "failed") {
-          clearInterval(interval);
-          setStep("error");
-          setMessage("Payment was cancelled or failed. Please try again.");
-        } else if (tries >= POLL_MAX_TRIES) {
-          clearInterval(interval);
-          setStep("error");
-          setMessage("Payment timed out. If you were charged, please contact support.");
-        }
-      } catch {
-        // network blip — keep polling
-      }
-    }, POLL_INTERVAL_MS);
-  };
-
-  // ── Retry ───────────────────────────────────────────────────────────────────
   const handleRetry = () => {
     setStep("form");
     setMessage("");
+    setOrderRef(null);
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight:      "100vh",
@@ -90,8 +99,6 @@ const Payment = ({ onPaid }) => {
       background:     "var(--white)",
       padding:        "40px 24px",
     }}>
-
-      {/* Card */}
       <div style={{
         width:        "100%",
         maxWidth:     "440px",
@@ -102,19 +109,19 @@ const Payment = ({ onPaid }) => {
         textAlign:    "center",
       }}>
 
-        {/* Mpesa logo mark */}
+        {/* Icon */}
         <div style={{
           width:          "64px",
           height:         "64px",
           borderRadius:   "50%",
-          background:     "#4CAF50",
+          background:     "var(--royal-blue-pale)",
           display:        "flex",
           alignItems:     "center",
           justifyContent: "center",
           margin:         "0 auto 24px",
-          fontSize:       "1.6rem",
+          fontSize:       "1.8rem",
         }}>
-          📱
+          💳
         </div>
 
         <h2 style={{
@@ -133,43 +140,99 @@ const Payment = ({ onPaid }) => {
           marginBottom: "32px",
           lineHeight:   "1.6",
         }}>
-          A one-time fee of <strong style={{ color: "var(--text-dark)" }}>KES 100</strong> unlocks
-          your full personalised career report — matched to Kenya's job market.
+          A one-time fee of{" "}
+          <strong style={{ color: "var(--text-dark)" }}>KES 100</strong>{" "}
+          unlocks your full personalised career report.
         </p>
 
-        {/* ── FORM STATE ── */}
+        {/* Payment method icons */}
+        <div style={{
+          display:        "flex",
+          justifyContent: "center",
+          gap:            "10px",
+          marginBottom:   "28px",
+          flexWrap:       "wrap",
+        }}>
+          {["Mpesa", "Airtel", "Visa", "Bank"].map((method) => (
+            <span key={method} style={{
+              background:   "var(--royal-blue-pale)",
+              color:        "var(--royal-blue)",
+              borderRadius: "6px",
+              padding:      "4px 12px",
+              fontSize:     "0.75rem",
+              fontWeight:   "700",
+              fontFamily:   "var(--font-display)",
+            }}>
+              {method}
+            </span>
+          ))}
+        </div>
+
+        {/* ── FORM ── */}
         {step === "form" && (
           <>
-            <div style={{ marginBottom: "16px", textAlign: "left" }}>
+            {/* Phone */}
+            <div style={{ marginBottom: "14px", textAlign: "left" }}>
               <label style={{
                 display:      "block",
                 fontSize:     "0.82rem",
                 fontWeight:   "700",
                 color:        "var(--text-dark)",
-                marginBottom: "8px",
+                marginBottom: "6px",
                 fontFamily:   "var(--font-display)",
               }}>
-                Mpesa Phone Number
+                Phone Number <span style={{ color: "var(--text-light)", fontWeight: 400 }}>(Mpesa / Airtel)</span>
               </label>
               <input
                 type="tel"
                 placeholder="e.g. 0712 345 678"
                 value={phone}
                 onChange={(e) => { setPhone(e.target.value); setMessage(""); }}
-                onKeyDown={(e) => e.key === "Enter" && handlePay()}
                 style={{
                   width:        "100%",
-                  padding:      "14px 16px",
+                  padding:      "13px 16px",
                   borderRadius: "var(--radius-md)",
                   border:       "2px solid var(--border)",
                   fontSize:     "1rem",
                   fontFamily:   "var(--font-body)",
                   outline:      "none",
                   boxSizing:    "border-box",
-                  transition:   "border 0.18s ease",
                 }}
-                onFocus={(e)  => e.target.style.border = "2px solid var(--royal-blue)"}
-                onBlur={(e)   => e.target.style.border = "2px solid var(--border)"}
+                onFocus={(e) => e.target.style.border = "2px solid var(--royal-blue)"}
+                onBlur={(e)  => e.target.style.border = "2px solid var(--border)"}
+              />
+            </div>
+
+            {/* Email */}
+            <div style={{ marginBottom: "20px", textAlign: "left" }}>
+              <label style={{
+                display:      "block",
+                fontSize:     "0.82rem",
+                fontWeight:   "700",
+                color:        "var(--text-dark)",
+                marginBottom: "6px",
+                fontFamily:   "var(--font-display)",
+              }}>
+                Email Address <span style={{ color: "var(--text-light)", fontWeight: 400 }}>(optional — for card payments)</span>
+              </label>
+              <input
+                type="email"
+                placeholder="e.g. student@email.com"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setMessage(""); }}
+                onKeyDown={(e) => e.key === "Enter" && handlePay()}
+                style={{
+                  width:        "100%",
+                  padding:      "13px 16px",
+                  borderRadius: "var(--radius-md)",
+                  border:       "2px solid var(--border)",
+                  fontSize:     "1rem",
+                  fontFamily:   "var(--font-body)",
+                  outline:      "none",
+                  boxSizing:    "border-box",
+                }}
+                onFocus={(e) => e.target.style.border = "2px solid var(--royal-blue)"}
+                onBlur={(e)  => e.target.style.border = "2px solid var(--border)"}
               />
             </div>
 
@@ -187,25 +250,25 @@ const Payment = ({ onPaid }) => {
             <button
               className="btn-primary"
               onClick={handlePay}
-              style={{ width: "100%", marginTop: "8px" }}
+              style={{ width: "100%" }}
             >
-              Pay KES 100 via Mpesa →
+              Pay KES 100 Securely →
             </button>
 
             <p style={{
-              fontSize:   "0.78rem",
+              fontSize:   "0.76rem",
               color:      "var(--text-light)",
-              marginTop:  "16px",
+              marginTop:  "14px",
               lineHeight: "1.5",
             }}>
-              🔒 Secure payment via Safaricom Mpesa.
-              You will receive a PIN prompt on your phone.
+              🔒 Powered by Pesapal. You will be redirected to a secure
+              payment page. Pay via Mpesa, Airtel Money, Visa, or bank transfer.
             </p>
           </>
         )}
 
-        {/* ── WAITING STATE ── */}
-        {step === "waiting" && (
+        {/* ── REDIRECTING ── */}
+        {step === "redirecting" && (
           <div style={{ padding: "16px 0" }}>
             <div className="spinner" style={{ margin: "0 auto 20px" }} />
             <p style={{
@@ -216,17 +279,28 @@ const Payment = ({ onPaid }) => {
             }}>
               {message}
             </p>
-            <p style={{
-              fontSize:   "0.82rem",
-              color:      "var(--text-light)",
-              marginTop:  "8px",
-            }}>
-              Do not close this page. This may take up to 30 seconds.
+            <p style={{ fontSize: "0.82rem", color: "var(--text-light)", marginTop: "8px" }}>
+              You will be redirected to Pesapal's secure payment page shortly.
             </p>
           </div>
         )}
 
-        {/* ── ERROR STATE ── */}
+        {/* ── WAITING (returned from Pesapal) ── */}
+        {step === "waiting" && (
+          <div style={{ padding: "16px 0" }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>✅</div>
+            <p style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: "700",
+              fontSize:   "1rem",
+              color:      "var(--success)",
+            }}>
+              {message}
+            </p>
+          </div>
+        )}
+
+        {/* ── ERROR ── */}
         {step === "error" && (
           <div style={{ padding: "8px 0" }}>
             <p style={{
@@ -237,11 +311,7 @@ const Payment = ({ onPaid }) => {
             }}>
               ⚠️ {message}
             </p>
-            <button
-              className="btn-primary"
-              onClick={handleRetry}
-              style={{ width: "100%" }}
-            >
+            <button className="btn-primary" onClick={handleRetry} style={{ width: "100%" }}>
               Try Again
             </button>
           </div>
