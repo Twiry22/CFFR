@@ -93,7 +93,7 @@ const Welcome = ({ onStart }) => {
             maxWidth:     "480px",
             margin:       "0 auto 40px",
           }}>
-            Answer 10 simple questions and discover the 3 career paths
+            Answer 11 simple questions and discover the 3 career paths
             that best match who you are.
           </p>
 
