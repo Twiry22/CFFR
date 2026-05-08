@@ -16,7 +16,7 @@ const router  = express.Router();
 const CONSUMER_KEY    = process.env.PESAPAL_CONSUMER_KEY;     // ***YOUR_PESAPAL_CONSUMER_KEY***
 const CONSUMER_SECRET = process.env.PESAPAL_CONSUMER_SECRET;  // ***YOUR_PESAPAL_CONSUMER_SECRET***
 const CALLBACK_URL    = process.env.PESAPAL_CALLBACK_URL;      // ***https://cffr-backend.onrender.com/api/pay/callback***
-const AMOUNT          = 100;
+const AMOUNT          = 250;
 const CURRENCY        = "KES";
 
 // Sandbox vs Production — set PESAPAL_ENV=production in Render when going live
