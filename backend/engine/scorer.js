@@ -1,11 +1,11 @@
 /**
- * CFFR Scoring Engine  v2.4
+ * CFFR Scoring Engine  v3.1
  * ─────────────────────────────────────────────────────────────────────────────
  * VARIABLE WEIGHTS:
  *   Market Demand     25%
  *   Future Relevance  25%
- *   Aptitude          20%
- *   Interest          20%
+ *   Aptitude          25%
+ *   Interest          15%
  *   Accessibility     10%
  *
  * v2.0 — Career specificity: 1 specific career per cluster per personality
@@ -13,9 +13,16 @@
  * v2.2 — Aptitude confidence dampener on final total
  * v2.3 — Q11 (KCSE cluster points) affects both Aptitude and Accessibility
  * v2.4 — Dampener floor raised from 0.50 to 0.72
- *         New range: aptitude 0 → ×0.72 | aptitude 100 → ×1.00
- *         Typical score range: 48–95
- *         Strong matches: 70–95 | Average: 55–70 | Weak: 48–55
+ * v3.0 — Weight rebalance: Aptitude ↑ to 25%, Interest ↓ to 15%
+ *         4 new clusters: sports_recreation, hospitality_tourism,
+ *         automotive_trades, beauty_wellness
+ *         New career spaces added to validator
+ *         New subjects: physical_education, computer_ict added to affinities
+ *
+ * DAMPENER:
+ *   Floor: 0.72 | Range: aptitude 0 → ×0.72 | aptitude 100 → ×1.00
+ *   0.72 + 0.28 = 1.00 ✓
+ *   Typical score range: 48–95
  *
  * Q11 APTITUDE EFFECT:
  *   above_60 → +15 pts   50_60 → +10 pts   40_50 → +6 pts
@@ -55,12 +62,23 @@ const JOB_VALUES     = [
   "good_income", "making_difference", "building_creating",
   "creative_expression", "leadership_decisions", "research_discovery",
 ];
+
+// Updated: includes 4 new career spaces
 const CAREER_SPACES  = [
-  "ai_data_technology", "climate_renewable_energy",
-  "healthcare_medicine_mental_health", "digital_media_content_design",
-  "modern_agribusiness_food_tech", "finance_banking_entrepreneurship",
-  "law_policy_governance", "education_community_development",
+  "ai_data_technology",
+  "climate_renewable_energy",
+  "healthcare_medicine_mental_health",
+  "digital_media_content_design",
+  "modern_agribusiness_food_tech",
+  "finance_banking_entrepreneurship",
+  "law_policy_governance",
+  "education_community_development",
+  "sports_fitness_recreation",
+  "hospitality_tourism_events",
+  "automotive_logistics_trades",
+  "beauty_wellness_personal_care",
 ];
+
 const FUTURE_MINDSETS = [
   "keep_learning", "prefer_established", "work_online_internationally",
   "work_within_community", "tech_human_connection", "cutting_edge",
@@ -79,62 +97,78 @@ const KCSE_APTITUDE_BONUS = {
   skipped:    0,
 };
 
+// Clusters typically entered via TVET/diploma rather than university degree
 const TVET_CLUSTERS = [
   "technology_data", "engineering_built", "agricultural_tech", "creative_economy",
+  "sports_recreation", "automotive_trades", "beauty_wellness", "hospitality_tourism",
 ];
 
 // ─── Subject to Cluster Affinity ─────────────────────────────────────────────
 
 const SUBJECT_CLUSTER_AFFINITY = {
-  mathematics:           ["technology_data", "engineering_built", "business_finance", "agricultural_tech"],
-  biology:               ["health_sciences", "agricultural_tech", "green_economy"],
+  mathematics:           ["technology_data", "engineering_built", "business_finance", "agricultural_tech", "automotive_trades"],
+  biology:               ["health_sciences", "agricultural_tech", "green_economy", "sports_recreation", "beauty_wellness"],
   chemistry:             ["health_sciences", "engineering_built", "green_economy", "agricultural_tech"],
-  physics:               ["engineering_built", "technology_data", "green_economy"],
-  history_government:    ["social_governance", "business_finance"],
-  geography:             ["green_economy", "agricultural_tech", "social_governance"],
-  cre_ire:               ["social_governance", "health_sciences"],
-  business_studies:      ["business_finance", "agricultural_tech", "social_governance"],
+  physics:               ["engineering_built", "technology_data", "green_economy", "automotive_trades"],
+  history_government:    ["social_governance", "business_finance", "education_teaching"],
+  geography:             ["green_economy", "agricultural_tech", "social_governance", "hospitality_tourism"],
+  cre_ire:               ["social_governance", "health_sciences", "education_teaching"],
+  business_studies:      ["business_finance", "agricultural_tech", "social_governance", "hospitality_tourism"],
   agriculture:           ["agricultural_tech", "green_economy", "health_sciences"],
   computer_studies:      ["technology_data", "engineering_built", "creative_economy"],
-  home_science:          ["health_sciences", "agricultural_tech"],
-  art_design:            ["creative_economy"],
-  english:               ["creative_economy", "social_governance", "business_finance"],
-  kiswahili:             ["social_governance", "creative_economy"],
+  home_science:          ["health_sciences", "agricultural_tech", "hospitality_tourism", "beauty_wellness"],
+  art_design:            ["creative_economy", "beauty_wellness"],
+  english:               ["creative_economy", "social_governance", "business_finance", "hospitality_tourism", "education_teaching"],
+  kiswahili:             ["social_governance", "creative_economy", "hospitality_tourism", "education_teaching"],
   integrated_science:    ["health_sciences", "engineering_built", "green_economy", "agricultural_tech"],
-  agriculture_nutrition: ["agricultural_tech", "green_economy", "health_sciences"],
-  creative_arts:         ["creative_economy"],
-  social_studies_cre:    ["social_governance", "health_sciences"],
-  physical_education:    ["health_sciences"],
-  computer_ict:          ["technology_data", "engineering_built", "creative_economy"],
+  agriculture_nutrition: ["agricultural_tech", "green_economy", "health_sciences", "hospitality_tourism"],
+  creative_arts:         ["creative_economy", "beauty_wellness", "sports_recreation"],
+  social_studies_cre:    ["social_governance", "health_sciences", "education_teaching"],
+  physical_education:    ["health_sciences", "sports_recreation", "education_teaching"],
+  computer_ict:          ["technology_data", "engineering_built", "creative_economy", "automotive_trades"],
 };
 
 // ─── Activity to Cluster Affinity ────────────────────────────────────────────
 
 const ACTIVITY_CLUSTER_AFFINITY = {
-  people_difference: ["health_sciences", "social_governance", "agricultural_tech"],
-  solving_figuring:  ["technology_data", "engineering_built", "green_economy", "business_finance"],
-  creating_building: ["creative_economy", "engineering_built", "technology_data", "agricultural_tech"],
+  people_difference: [
+    "health_sciences", "social_governance", "agricultural_tech",
+    "sports_recreation", "hospitality_tourism", "education_teaching",
+  ],
+  solving_figuring:  [
+    "technology_data", "engineering_built", "green_economy",
+    "business_finance", "automotive_trades",
+  ],
+  creating_building: [
+    "creative_economy", "engineering_built", "technology_data",
+    "agricultural_tech", "automotive_trades", "beauty_wellness",
+  ],
 };
 
 // ─── Secondary Personality Affinity ──────────────────────────────────────────
 
 const SECONDARY_PERSONALITY = {
-  technology_data:   ["hands_on_practical",   "organized_goal_setter"],
-  health_sciences:   ["organized_goal_setter", "environmental_caring"],
-  engineering_built: ["hands_on_practical",    "curious_analytical"],
-  green_economy:     ["curious_analytical",    "hands_on_practical"],
-  creative_economy:  ["curious_analytical",    "hands_on_practical"],
-  business_finance:  ["curious_analytical",    "caring_social"],
-  social_governance: ["organized_goal_setter", "creative_expressive"],
-  agricultural_tech: ["hands_on_practical",    "curious_analytical"],
+  technology_data:    ["hands_on_practical",   "organized_goal_setter"],
+  health_sciences:    ["organized_goal_setter", "environmental_caring"],
+  engineering_built:  ["hands_on_practical",    "curious_analytical"],
+  green_economy:      ["curious_analytical",    "hands_on_practical"],
+  creative_economy:   ["curious_analytical",    "hands_on_practical"],
+  business_finance:   ["curious_analytical",    "caring_social"],
+  social_governance:  ["organized_goal_setter", "creative_expressive"],
+  agricultural_tech:  ["hands_on_practical",    "curious_analytical"],
+  sports_recreation:  ["caring_social",         "organized_goal_setter"],
+  hospitality_tourism:["organized_goal_setter", "creative_expressive"],
+  automotive_trades:  ["curious_analytical",    "organized_goal_setter"],
+  beauty_wellness:    ["caring_social",         "hands_on_practical"],
+  education_teaching: ["organized_goal_setter", "creative_expressive"],
 };
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 function toWeightedPicks(raw, maxPicks = 1) {
   if (!raw) return [];
-  const arr    = Array.isArray(raw) ? raw : [raw];
-  const picks  = arr.slice(0, maxPicks);
+  const arr   = Array.isArray(raw) ? raw : [raw];
+  const picks = arr.slice(0, maxPicks);
   const weight = 1 / picks.length;
   return picks.map((v) => [v, weight]);
 }
@@ -197,8 +231,6 @@ function calcAptitudeScore(answers, cluster) {
   else                              points += Math.round((q6Level / 5) * 12);
 
   // ── Q11 KCSE cluster points bonus ────────────────────────────────────────
-  // Only applied when personality is aligned — high KCSE points should not
-  // boost a cluster the student is fundamentally misaligned with.
   if (hasAnyPersonalityMatch) {
     const kcseBonus = KCSE_APTITUDE_BONUS[answers.q11] ?? 0;
     points += kcseBonus;
@@ -212,8 +244,8 @@ function calcFutureRelevanceScore(answers, cluster) {
   const q6Level = parseInt(answers.q6, 10) || 1;
 
   const techFutureClusters = [
-    "technology_data", "engineering_built",
-    "green_economy", "health_sciences", "agricultural_tech",
+    "technology_data", "engineering_built", "green_economy",
+    "health_sciences", "agricultural_tech", "automotive_trades",
   ];
   studentPoints += techFutureClusters.includes(cluster.id)
     ? Math.round((q6Level / 5) * 25)
@@ -233,7 +265,8 @@ function calcFutureRelevanceScore(answers, cluster) {
 function calcMarketDemandScore(answers, cluster) {
   let score = cluster.marketDemandIndex;
   const highDemandClusters = [
-    "business_finance", "engineering_built", "technology_data", "health_sciences",
+    "business_finance", "engineering_built", "technology_data",
+    "health_sciences", "automotive_trades", "education_teaching",
   ];
   const jobValuePicks = Array.isArray(answers.q5) ? answers.q5 : answers.q5 ? [answers.q5] : [];
   if (jobValuePicks.includes("good_income") && highDemandClusters.includes(cluster.id))
@@ -293,6 +326,8 @@ function generateFitExplanation(answers, cluster, specificCareer) {
     agriculture_nutrition: "Agriculture & Nutrition",
     creative_arts:         "Creative Arts",
     computer_ict:          "Computer Science / ICT",
+    physical_education:    "Physical Education",
+    social_studies_cre:    "Social Studies / CRE",
   };
 
   const matchedSubjects = (answers.q1 || []).filter(
@@ -331,8 +366,8 @@ function generateFitExplanation(answers, cluster, specificCareer) {
     work_within_community:       "Your focus on local community impact is well-matched to this career.",
     prefer_established:          "This is one of Kenya's most established career tracks.",
   };
-  const mindsetPicks    = Array.isArray(answers.q8) ? answers.q8 : answers.q8 ? [answers.q8] : [];
-  const matchedMindset  = mindsetPicks.find((m) => cluster.futureMindsetKeys?.includes(m));
+  const mindsetPicks   = Array.isArray(answers.q8) ? answers.q8 : answers.q8 ? [answers.q8] : [];
+  const matchedMindset = mindsetPicks.find((m) => cluster.futureMindsetKeys?.includes(m));
   if (matchedMindset && mindsetMessages[matchedMindset]) parts.push(mindsetMessages[matchedMindset]);
 
   const aptitudeSubjects = (answers.q2 || []).filter(
@@ -393,19 +428,16 @@ function runCFFRAssessment(answers) {
     const marketDemand    = calcMarketDemandScore(answers, cluster);
     const accessibility   = calcAccessibilityScore(answers, cluster);
 
-    // ── Raw weighted total ──────────────────────────────────────────────────
+    // ── Weighted total (v3.0 weights) ──────────────────────────────────────
     const rawTotal =
       marketDemand    * 0.25 +
       futureRelevance * 0.25 +
-      aptitude        * 0.20 +
-      interest        * 0.20 +
+      aptitude        * 0.25 +
+      interest        * 0.15 +
       accessibility   * 0.10;
 
-    // ── Aptitude confidence dampener (v2.4) ─────────────────────────────────
-    // Floor raised to 0.72 for a natural score range of ~48–95.
-    // Strong matches: 70–95 | Average: 55–70 | Weak: 48–55
-    // The two constants must always sum to 1.0:
-    //   0.72 + 0.28 = 1.00 ✓
+    // ── Aptitude confidence dampener ────────────────────────────────────────
+    // 0.72 + 0.28 = 1.00 ✓
     const aptitudeConfidence = 0.72 + (aptitude / 100) * 0.28;
     const total = Math.round(rawTotal * aptitudeConfidence);
 
@@ -417,11 +449,9 @@ function runCFFRAssessment(answers) {
 
   results.sort((a, b) => b.scores.total - a.scores.total);
 
-  // Attach schools after sorting — only computed for all clusters
-  // (schools.js is fast so this is fine)
   const resultsWithSchools = results.map((r) => ({
     ...r,
-    schools: getSchoolsForStudent(r.cluster.id, answers.q9, answers.q10),
+    schools: getSchoolsForStudent(r.cluster.id, answers.q9, answers.q10, answers.q11),
   }));
 
   const studentProfile       = generateStudentProfile(answers);
@@ -429,7 +459,6 @@ function runCFFRAssessment(answers) {
   const primaryPersonality   = allPersonalityPicks[0] || null;
   const secondaryPersonality = allPersonalityPicks[1] || null;
 
-  // ── Top 3: 1 specific career per cluster, chosen by primary personality ─────
   const top3 = resultsWithSchools.slice(0, 3);
 
   const recommendations = top3.map((r, idx) => {
@@ -450,7 +479,6 @@ function runCFFRAssessment(answers) {
     };
   });
 
-  // ── Alternates: same top 3 clusters, careers chosen by secondary personality─
   let alternateRecommendations = [];
   if (studentProfile.hasSecondaryPersonality && secondaryPersonality) {
     alternateRecommendations = top3.map((r, idx) => {
@@ -540,7 +568,6 @@ function validateAnswers(answers) {
   if (!validBudgetTiers.includes(answers.q10))
     errors.push("Q10: Please select an education budget range.");
 
-  // Q11 — optional KCSE cluster points (skippable)
   const validKcse = [
     "above_60", "50_60", "40_50", "30_40", "20_30", "10_20", "below_10", "skipped",
   ];

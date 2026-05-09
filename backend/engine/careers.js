@@ -1,14 +1,22 @@
 /**
- * CFFR Career Clusters  v2.0
- * ─────────────────────────────────────────────────────────────────────────────
- * 8 original Kenya clusters + 4 new clusters:
- *   - sports_pe          (Sports, Football & Physical Education)
- *   - hospitality_tourism (Hospitality, Tourism & Events)
- *   - automotive_trades  (Automotive, Mechanical Trades & Logistics)
- *   - beauty_wellness    (Beauty, Hair & Wellness)
+ * CFFR Career Clusters  v2.2
+ * 13 Kenya-specific clusters, each mapped to a CBC Senior Secondary pathway.
+ * futureRelevanceIndex: 3-year Kenya outlook (2026–2029).
+ * marketDemandIndex:    Current Kenya job market demand.
+ *
+ * NEW in v2.0:
+ *   + sports_recreation    — Football, coaching, sports science, athletics
+ *   + hospitality_tourism  — Hotel management, culinary, tour guiding, events
+ *   + automotive_trades    — Mechanics, auto electrical, logistics
+ *   + beauty_wellness      — Hair, beauty therapy, nail tech, spa management
+ * NEW in v2.1:
+ *   + education_teaching   — Teaching, ECD, special needs, curriculum, training
  */
 
 const CAREER_CLUSTERS = {
+
+  // ── EXISTING 8 CLUSTERS ───────────────────────────────────────────────────
+
   technology_data: {
     id: "technology_data",
     name: "Technology & Data",
@@ -42,7 +50,7 @@ const CAREER_CLUSTERS = {
     name: "Health & Human Sciences",
     tagline: "Heal, support and transform lives",
     description:
-      "Kenya faces a critical shortage of healthcare workers — one doctor for every 10,000 Kenyans. This cluster includes medicine, nursing, clinical science, mental health, pharmacy, nutrition, and public health.",
+      "Kenya faces a critical shortage of healthcare workers — there is one doctor for every 10,000 Kenyans. This cluster includes medicine, nursing, clinical science, mental health, pharmacy, nutrition, and public health.",
     sssPathway: "Pure Sciences",
     futureRelevanceIndex: 85,
     marketDemandIndex: 92,
@@ -54,7 +62,7 @@ const CAREER_CLUSTERS = {
       "Nutritionist & Dietitian", "Psychologist / Counsellor", "Public Health Officer",
       "Physiotherapist", "Lab Scientist",
     ],
-    subjectInterest: ["biology", "chemistry", "home_science"],
+    subjectInterest: ["biology", "chemistry", "home_science", "agriculture_nutrition"],
     subjectAptitude: ["biology", "chemistry"],
     activityKey: "people_difference",
     personalityKey: "caring_social",
@@ -135,8 +143,8 @@ const CAREER_CLUSTERS = {
     futureGrowthLabel: "Growing",
     careers: [
       "Graphic & Brand Designer", "Film Director / Cinematographer", "Animator & Motion Graphics Artist",
-      "Architect", "Digital Content Creator", "Fashion Designer",
-      "Game Developer", "Journalist & Media Producer", "Photographer",
+      "Architect", "Digital Content Creator", "Fashion Designer", "Game Developer",
+      "Journalist & Media Producer", "Photographer",
     ],
     subjectInterest: ["art_design", "english", "computer_studies", "creative_arts"],
     subjectAptitude: ["art_design", "english", "creative_arts"],
@@ -187,7 +195,7 @@ const CAREER_CLUSTERS = {
     futureRelevanceIndex: 65,
     marketDemandIndex: 70,
     threeYearOutlook:
-      "Devolution has increased demand for skilled county government workers. The NGO and development sector remains one of Kenya's largest employers. Law, especially in tech regulation, land rights, and human rights, is growing.",
+      "Devolution has increased demand for skilled county government workers. The NGO and development sector remains one of Kenya's largest employers. Law, especially in areas of tech regulation, land rights, and human rights, is growing.",
     futureGrowthLabel: "Steady Demand",
     careers: [
       "Lawyer / Advocate", "Teacher / Educator", "Social Worker", "Policy Analyst",
@@ -233,39 +241,37 @@ const CAREER_CLUSTERS = {
     isHealthCluster: false,
   },
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // NEW CLUSTERS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── 4 NEW CLUSTERS ────────────────────────────────────────────────────────
 
-  sports_pe: {
-    id: "sports_pe",
-    name: "Sports, Football & Physical Education",
-    tagline: "Turn your passion for sport into a profession",
+  sports_recreation: {
+    id: "sports_recreation",
+    name: "Sports, Coaching & Recreation",
+    tagline: "Turn passion for sport into a professional career",
     description:
-      "Kenya's sports economy is growing fast — from professional football and athletics to sports science, coaching, physiotherapy, and sports management. The rise of academies, county sports programmes, and international talent pipelines means real careers exist beyond just playing.",
+      "Kenya is a global powerhouse in athletics and a growing force in football, rugby, and basketball. Behind every elite athlete is a team of coaches, sports scientists, physiotherapists, fitness trainers, and sports managers. This cluster is for students who live and breathe sport.",
     sssPathway: "Arts & Sports Science",
     futureRelevanceIndex: 70,
     marketDemandIndex: 65,
     threeYearOutlook:
-      "The Sports, Arts and Social Development Fund and county sports academies are creating structured pathways. Sports science, coaching licenses, and sports business management are the fastest-growing roles. Kenya's athletics brand is globally recognised.",
+      "Kenya's sports industry is professionalising rapidly. The government's Sports, Arts and Social Development Fund, growing football leagues, and international athletics contracts are creating structured career paths. Sports tourism and fitness culture are also booming.",
     futureGrowthLabel: "Growing",
     careers: [
-      "Professional Footballer / Athlete",
-      "Sports Coach",
+      "Football / Athletics Coach",
       "Sports Scientist",
       "Physical Education Teacher",
+      "Fitness Trainer / Personal Trainer",
       "Sports Physiotherapist",
-      "Sports Nutritionist",
+      "Sports Manager / Administrator",
+      "Recreation & Leisure Manager",
+      "Sports Journalist / Commentator",
       "Referee / Match Official",
-      "Sports Manager / Agent",
-      "Fitness Trainer / Gym Instructor",
     ],
-    subjectInterest: ["physical_education", "biology", "geography"],
+    subjectInterest: ["physical_education", "biology"],
     subjectAptitude: ["physical_education", "biology"],
     activityKey: "people_difference",
     personalityKey: "hands_on_practical",
     jobValueKey: "making_difference",
-    careerSpaceKey: "sports_recreation",
+    careerSpaceKey: "sports_fitness_recreation",
     futureMindsetKeys: ["work_within_community", "keep_learning", "tech_human_connection"],
     isTechCluster: false,
     isHealthCluster: false,
@@ -276,25 +282,25 @@ const CAREER_CLUSTERS = {
     name: "Hospitality, Tourism & Events",
     tagline: "Welcome the world to Kenya",
     description:
-      "Tourism is one of Kenya's top foreign exchange earners and the hospitality industry employs hundreds of thousands. From hotel management and culinary arts to tour guiding, events planning, and travel consulting, this cluster offers diverse, people-centred careers.",
+      "Kenya is one of Africa's top tourist destinations — from Maasai Mara safaris to Diani Beach and Nairobi's five-star hotels. This cluster covers hotel management, culinary arts, tour guiding, event planning, and travel management.",
     sssPathway: "Social Sciences or Arts & Sports Science",
     futureRelevanceIndex: 74,
-    marketDemandIndex: 76,
+    marketDemandIndex: 72,
     threeYearOutlook:
-      "Kenya's tourism rebound post-COVID has been strong. Safari, beach, conference, and eco-tourism are all growing. The MICE (Meetings, Incentives, Conferences, Events) sector in Nairobi is expanding rapidly, and hotel groups continue to invest in Kenya.",
-    futureGrowthLabel: "Strong Recovery & Growth",
+      "Kenya's tourism sector recovered strongly after COVID and is targeting 5 million international visitors by 2027. New luxury lodges, MICE (Meetings, Incentives, Conferences, Exhibitions) infrastructure, and Airbnb culture are all expanding job opportunities.",
+    futureGrowthLabel: "High Growth",
     careers: [
       "Hotel Manager",
       "Chef / Culinary Artist",
-      "Tour Guide",
-      "Travel Consultant",
-      "Events Planner",
+      "Tour Guide / Safari Guide",
+      "Event Planner & Manager",
+      "Travel & Tourism Agent",
       "Front Office Manager",
       "Food & Beverage Manager",
-      "Housekeeping Manager",
-      "Ecotourism Guide",
+      "Housekeeper / Accommodation Manager",
+      "Restaurant Manager",
     ],
-    subjectInterest: ["home_science", "english", "geography", "kiswahili", "business_studies"],
+    subjectInterest: ["home_science", "english", "geography", "agriculture_nutrition"],
     subjectAptitude: ["home_science", "english", "business_studies"],
     activityKey: "people_difference",
     personalityKey: "caring_social",
@@ -307,34 +313,102 @@ const CAREER_CLUSTERS = {
 
   automotive_trades: {
     id: "automotive_trades",
-    name: "Automotive, Mechanical Trades & Logistics",
+    name: "Automotive, Mechanics & Logistics",
     tagline: "Keep Kenya moving",
     description:
-      "From motor vehicle mechanics and auto electricians to welding, logistics, and the growing EV (electric vehicle) sector, this cluster is the backbone of Kenya's transport and manufacturing economy. Skilled tradespeople are persistently in short supply.",
-    sssPathway: "TVET / Technical",
-    futureRelevanceIndex: 76,
-    marketDemandIndex: 82,
+      "Every vehicle on Kenya's roads needs skilled mechanics, auto electricians, and technicians. With EVs on the rise and a booming logistics sector, this cluster is far more future-proof than most people think.",
+    sssPathway: "STEM (Technical)",
+    futureRelevanceIndex: 72,
+    marketDemandIndex: 80,
     threeYearOutlook:
-      "The rise of electric vehicles, expansion of road networks, and growth of e-commerce logistics are modernising this sector. TVET-trained auto technicians, EV specialists, and logistics coordinators are increasingly well-paid. Kenya's Bus Rapid Transit expansion also needs skilled workers.",
-    futureGrowthLabel: "High & Stable Demand",
+      "Kenya's road network expansion, growing matatu and logistics industries, and the shift toward electric vehicles are creating sustained demand for automotive technicians. Certified mechanics command strong incomes, especially in major towns.",
+    futureGrowthLabel: "Stable High Demand",
     careers: [
-      "Motor Vehicle Mechanic",
+      "Automotive Mechanic",
       "Auto Electrician",
       "EV (Electric Vehicle) Technician",
-      "Welder & Fabricator",
-      "Logistics & Supply Chain Coordinator",
-      "Truck / Heavy Vehicle Driver",
       "Motorcycle Mechanic",
+      "Diesel Plant Mechanic",
+      "Logistics & Fleet Manager",
       "Driving Instructor",
-      "Panel Beater & Spray Painter",
+      "Spray Painter / Panel Beater",
+      "Auto Parts Specialist",
     ],
-    subjectInterest: ["physics", "mathematics", "computer_studies"],
+    subjectInterest: ["physics", "mathematics", "computer_ict"],
     subjectAptitude: ["physics", "mathematics"],
     activityKey: "creating_building",
     personalityKey: "hands_on_practical",
     jobValueKey: "building_creating",
-    careerSpaceKey: "automotive_logistics",
-    futureMindsetKeys: ["work_within_community", "keep_learning", "cutting_edge"],
+    careerSpaceKey: "automotive_logistics_trades",
+    futureMindsetKeys: ["keep_learning", "work_within_community", "cutting_edge"],
+    isTechCluster: false,
+    isHealthCluster: false,
+  },
+
+  education_teaching: {
+    id: "education_teaching",
+    name: "Education & Teaching",
+    tagline: "Shape the next generation of Kenyans",
+    description:
+      "Teaching is one of Kenya's most stable and respected professions, and the CBC rollout is actively reshaping what it means to be an educator. From primary school teachers and ECD specialists to university lecturers and corporate trainers, this cluster is for people who love helping others grow and learn.",
+    sssPathway: "Social Sciences or Arts & Sports Science",
+    futureRelevanceIndex: 75,
+    marketDemandIndex: 82,
+    threeYearOutlook:
+      "Kenya's CBC curriculum reforms are creating significant demand for retrained and newly qualified teachers across all levels. The government's teacher employment drive under the Teachers Service Commission (TSC) continues to absorb thousands of graduates annually. ECD and special needs education are priority growth areas.",
+    futureGrowthLabel: "Steady High Demand",
+    careers: [
+      "Primary School Teacher",
+      "Secondary School Teacher",
+      "Early Childhood Development (ECD) Teacher",
+      "Special Needs Educator",
+      "University Lecturer / Researcher",
+      "Education Administrator / Head Teacher",
+      "Curriculum Developer",
+      "Corporate Trainer / L&D Specialist",
+      "Education Consultant",
+    ],
+    subjectInterest: ["english", "kiswahili", "history_government", "biology", "mathematics", "social_studies_cre"],
+    subjectAptitude: ["english", "kiswahili", "history_government", "social_studies_cre"],
+    activityKey: "people_difference",
+    personalityKey: "caring_social",
+    jobValueKey: "making_difference",
+    careerSpaceKey: "education_community_development",
+    futureMindsetKeys: ["work_within_community", "keep_learning", "tech_human_connection"],
+    isTechCluster: false,
+    isHealthCluster: false,
+  },
+
+  education_teaching: {
+    id: "education_teaching",
+    name: "Education & Teaching",
+    tagline: "Shape the next generation of Kenyans",
+    description:
+      "Teaching is one of the most impactful and stable careers in Kenya. From Early Childhood Development and primary school to secondary, special needs, university lecturing, and corporate training, this cluster is for students who love learning and love helping others grow.",
+    sssPathway: "Social Sciences or Arts & Sports Science",
+    futureRelevanceIndex: 75,
+    marketDemandIndex: 82,
+    threeYearOutlook:
+      "Kenya's CBC rollout is creating massive demand for retrained and newly qualified teachers at all levels. The government's Junior Secondary School expansion programme is hiring thousands of new teachers. ECD is also a rapidly growing specialisation as early education gains policy focus.",
+    futureGrowthLabel: "High Steady Demand",
+    careers: [
+      "Primary School Teacher",
+      "Secondary School Teacher",
+      "Early Childhood Development (ECD) Teacher",
+      "Special Needs Educator",
+      "University Lecturer / Researcher",
+      "Education Administrator / Head Teacher",
+      "Curriculum Developer",
+      "Corporate Trainer / L&D Specialist",
+      "Education Consultant",
+    ],
+    subjectInterest: ["english", "kiswahili", "history_government", "biology", "mathematics", "social_studies_cre"],
+    subjectAptitude: ["english", "kiswahili", "history_government", "social_studies_cre"],
+    activityKey: "people_difference",
+    personalityKey: "caring_social",
+    jobValueKey: "making_difference",
+    careerSpaceKey: "education_community_development",
+    futureMindsetKeys: ["work_within_community", "keep_learning", "tech_human_connection"],
     isTechCluster: false,
     isHealthCluster: false,
   },
@@ -342,32 +416,32 @@ const CAREER_CLUSTERS = {
   beauty_wellness: {
     id: "beauty_wellness",
     name: "Beauty, Hair & Wellness",
-    tagline: "Build a business doing what you love",
+    tagline: "Build a business out of making people feel amazing",
     description:
-      "The beauty and wellness industry in Kenya is one of the fastest-growing small business sectors, driven by a young, style-conscious population and growing middle class. From hairdressing and barbering to cosmetology, nail technology, and wellness therapy, skilled practitioners can build highly profitable independent businesses.",
-    sssPathway: "TVET / Arts & Sports Science",
-    futureRelevanceIndex: 68,
-    marketDemandIndex: 72,
+      "Kenya's beauty industry is worth billions and growing fast. From hair salons and barbershops to nail studios, skin clinics, and spa management, this cluster offers real entrepreneurial and employment opportunities — especially for those with flair, creativity, and people skills.",
+    sssPathway: "Arts & Sports Science or Social Sciences",
+    futureRelevanceIndex: 66,
+    marketDemandIndex: 74,
     threeYearOutlook:
-      "Kenya's beauty industry is projected to grow significantly over the next three years, fuelled by social media influence, African beauty brand growth, and export of Kenyan hair and cosmetics products. Certified beauty professionals are in demand in salons, spas, hotels, film sets, and their own businesses.",
+      "Kenya's beauty sector is expanding beyond salons into skincare brands, beauty tech, wellness tourism, and online tutorials. Social media has made beauty entrepreneurship accessible to young Kenyans, and demand for trained professionals is rising in hotels, clinics, and events.",
     futureGrowthLabel: "Growing",
     careers: [
-      "Hairdresser / Hair Stylist",
-      "Barber",
-      "Cosmetologist",
+      "Hair Stylist / Salon Owner",
+      "Barber / Barbershop Owner",
+      "Beauty Therapist",
       "Nail Technician",
-      "Make-Up Artist",
-      "Massage Therapist / Spa Therapist",
-      "Beauty Salon Owner / Entrepreneur",
-      "Skincare Specialist / Aesthetician",
-      "Beauty Content Creator",
+      "Makeup Artist",
+      "Spa & Wellness Manager",
+      "Skincare & Aesthetics Therapist",
+      "Beauty Product Entrepreneur",
+      "Cosmetology Instructor",
     ],
     subjectInterest: ["home_science", "art_design", "biology", "creative_arts"],
     subjectAptitude: ["home_science", "art_design", "creative_arts"],
     activityKey: "creating_building",
     personalityKey: "creative_expressive",
     jobValueKey: "creative_expression",
-    careerSpaceKey: "beauty_wellness_lifestyle",
+    careerSpaceKey: "beauty_wellness_personal_care",
     futureMindsetKeys: ["work_within_community", "work_online_internationally", "tech_human_connection"],
     isTechCluster: false,
     isHealthCluster: false,
@@ -446,44 +520,52 @@ const CAREER_PERSONALITY_MAP = {
     organized_goal_setter: "Agribusiness Manager",
     creative_expressive:   "AgriTech Entrepreneur",
   },
-  sports_pe: {
-    hands_on_practical:    "Sports Coach",
+  sports_recreation: {
+    hands_on_practical:    "Football / Athletics Coach",
     caring_social:         "Physical Education Teacher",
+    organized_goal_setter: "Sports Manager / Administrator",
     curious_analytical:    "Sports Scientist",
-    organized_goal_setter: "Sports Manager / Agent",
-    creative_expressive:   "Fitness Trainer / Gym Instructor",
-    environmental_caring:  "Sports Nutritionist",
+    creative_expressive:   "Sports Journalist / Commentator",
+    environmental_caring:  "Recreation & Leisure Manager",
   },
   hospitality_tourism: {
     caring_social:         "Hotel Manager",
     creative_expressive:   "Chef / Culinary Artist",
-    organized_goal_setter: "Events Planner",
-    hands_on_practical:    "Tour Guide",
-    curious_analytical:    "Travel Consultant",
-    environmental_caring:  "Ecotourism Guide",
+    organized_goal_setter: "Event Planner & Manager",
+    hands_on_practical:    "Tour Guide / Safari Guide",
+    curious_analytical:    "Travel & Tourism Agent",
+    environmental_caring:  "Food & Beverage Manager",
   },
   automotive_trades: {
-    hands_on_practical:    "Motor Vehicle Mechanic",
-    curious_analytical:    "EV (Electric Vehicle) Technician",
-    organized_goal_setter: "Logistics & Supply Chain Coordinator",
-    creative_expressive:   "Panel Beater & Spray Painter",
+    hands_on_practical:    "Automotive Mechanic",
+    curious_analytical:    "Auto Electrician",
+    organized_goal_setter: "Logistics & Fleet Manager",
+    creative_expressive:   "Spray Painter / Panel Beater",
     caring_social:         "Driving Instructor",
     environmental_caring:  "EV (Electric Vehicle) Technician",
   },
+  education_teaching: {
+    caring_social:         "Primary School Teacher",
+    organized_goal_setter: "Education Administrator / Head Teacher",
+    creative_expressive:   "Early Childhood Development (ECD) Teacher",
+    curious_analytical:    "Curriculum Developer",
+    hands_on_practical:    "Special Needs Educator",
+    environmental_caring:  "Education Consultant",
+  },
   beauty_wellness: {
-    creative_expressive:   "Make-Up Artist",
-    caring_social:         "Massage Therapist / Spa Therapist",
-    hands_on_practical:    "Hairdresser / Hair Stylist",
-    organized_goal_setter: "Beauty Salon Owner / Entrepreneur",
-    curious_analytical:    "Skincare Specialist / Aesthetician",
-    environmental_caring:  "Beauty Content Creator",
+    creative_expressive:   "Hair Stylist / Salon Owner",
+    caring_social:         "Beauty Therapist",
+    organized_goal_setter: "Spa & Wellness Manager",
+    hands_on_practical:    "Nail Technician",
+    curious_analytical:    "Skincare & Aesthetics Therapist",
+    environmental_caring:  "Beauty Product Entrepreneur",
   },
 };
 
 /**
  * pickCareerFromCluster
- * Returns the single best-fit career title for a given personality.
- * Falls back to the first career in the cluster's careers array.
+ * Returns the single best-fit career title for a personality within a cluster.
+ * Falls back to the first career in the cluster list if no match.
  */
 function pickCareerFromCluster(cluster, personality) {
   const map = CAREER_PERSONALITY_MAP[cluster.id];
