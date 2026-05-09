@@ -1,6 +1,9 @@
 /**
- * Payment.jsx  v2.0 — Pesapal
+ * Payment.jsx  v2.1 — Pesapal
  * ─────────────────────────────────────────────────────────────────────────────
+ * v2.0 — Pesapal integration
+ * v2.1 — Fee updated to KES 250
+ *
  * Flow:
  * 1. Student enters phone + optional email
  * 2. Frontend calls /api/pay/initiate → gets Pesapal redirect URL
@@ -14,11 +17,11 @@ import { useState, useEffect } from "react";
 import api from "../services/api";
 
 const Payment = ({ onPaid }) => {
-  const [phone,     setPhone]     = useState("");
-  const [email,     setEmail]     = useState("");
-  const [step,      setStep]      = useState("form");   // "form" | "redirecting" | "waiting" | "error"
-  const [message,   setMessage]   = useState("");
-  const [orderRef,  setOrderRef]  = useState(null);
+  const [phone,    setPhone]    = useState("");
+  const [email,    setEmail]    = useState("");
+  const [step,     setStep]     = useState("form");   // "form" | "redirecting" | "waiting" | "error"
+  const [message,  setMessage]  = useState("");
+  const [orderRef, setOrderRef] = useState(null);
 
   // ── Check if returning from Pesapal redirect ──────────────────────────────
   useEffect(() => {
@@ -27,7 +30,6 @@ const Payment = ({ onPaid }) => {
     const ref     = params.get("ref");
 
     if (payment === "success" && ref) {
-      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
       setStep("waiting");
       setMessage("Payment confirmed! Loading your assessment...");
@@ -72,8 +74,6 @@ const Payment = ({ onPaid }) => {
       }
 
       setOrderRef(res.data.orderRef);
-
-      // Redirect student to Pesapal hosted payment page
       window.location.href = res.data.redirectUrl;
 
     } catch (err) {
