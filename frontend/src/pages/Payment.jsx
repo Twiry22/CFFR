@@ -23,11 +23,18 @@ const Payment = ({ onPaid }) => {
   const [message,  setMessage]  = useState("");
   const [orderRef, setOrderRef] = useState(null);
 
-  // ── Check if returning from Pesapal redirect ──────────────────────────────
+  // ── Check URL params — bypass or Pesapal return ───────────────────────────
   useEffect(() => {
     const params  = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
     const ref     = params.get("ref");
+
+    // ── Owner bypass — access via ?bypass=cffr-admin-2025 ────────────────────
+    if (params.get("bypass") === "cffr-admin-2025") {
+      window.history.replaceState({}, "", window.location.pathname);
+      onPaid();
+      return;
+    }
 
     if (payment === "success" && ref) {
       window.history.replaceState({}, "", window.location.pathname);
