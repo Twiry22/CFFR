@@ -428,18 +428,16 @@ function runCFFRAssessment(answers) {
     const marketDemand    = calcMarketDemandScore(answers, cluster);
     const accessibility   = calcAccessibilityScore(answers, cluster);
 
-    // ── Weighted total (v3.0 weights) ──────────────────────────────────────
-    const rawTotal =
+    // ── Weighted total (v3.1 weights) ──────────────────────────────────────
+    // Dampener removed — weights alone govern the score.
+    // Expected range: strong match 75–88 | average 60–74 | weak 45–59
+    const total = Math.round(
       marketDemand    * 0.25 +
       futureRelevance * 0.25 +
       aptitude        * 0.25 +
       interest        * 0.15 +
-      accessibility   * 0.10;
-
-    // ── Aptitude confidence dampener ────────────────────────────────────────
-    // 0.72 + 0.28 = 1.00 ✓
-    const aptitudeConfidence = 0.72 + (aptitude / 100) * 0.28;
-    const total = Math.round(rawTotal * aptitudeConfidence);
+      accessibility   * 0.10
+    );
 
     results.push({
       cluster,
