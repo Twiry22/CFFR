@@ -4,11 +4,11 @@
  */
 
 const SCORE_LABELS = {
-  marketDemand:    { label: "Market Demand",    weight: "25%" },
-  futureRelevance: { label: "Future Relevance", weight: "25%" },
-  aptitude:        { label: "Aptitude",         weight: "25%" },
-  interest:        { label: "Interest",         weight: "15%" },
-  accessibility:   { label: "Accessibility",   weight: "10%" },
+  marketDemand:    { label: "Market Demand"    },
+  futureRelevance: { label: "Future Relevance" },
+  aptitude:        { label: "Aptitude"         },
+  interest:        { label: "Interest"         },
+  accessibility:   { label: "Accessibility"   },
 };
 
 const ScoreBreakdown = ({ scoreBreakdown }) => {
@@ -39,27 +39,14 @@ const ScoreBreakdown = ({ scoreBreakdown }) => {
                 alignItems:     "center",
                 marginBottom:   "6px",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize:   "0.85rem",
-                    fontWeight: "500",
-                    color:      "var(--text-dark)",
-                  }}>
-                    {meta.label}
-                  </span>
-                  <span style={{
-                    fontFamily:   "var(--font-body)",
-                    fontSize:     "0.72rem",
-                    fontWeight:   "500",
-                    color:        "var(--text-light)",
-                    background:   "var(--off-white)",
-                    borderRadius: "999px",
-                    padding:      "1px 7px",
-                  }}>
-                    {meta.weight}
-                  </span>
-                </div>
+                <span style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize:   "0.85rem",
+                  fontWeight: "500",
+                  color:      "var(--text-dark)",
+                }}>
+                  {meta.label}
+                </span>
                 <span style={{
                   fontFamily: "var(--font-display)",
                   fontSize:   "0.85rem",

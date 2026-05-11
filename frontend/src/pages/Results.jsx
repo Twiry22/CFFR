@@ -86,7 +86,7 @@ const Results = ({ result, onRetake }) => {
             }}>
               {studentProfile.exploratoryProfile
                 ? "Here are your top 3 career directions, plus 3 more worth considering. Remember you're still exploring, and that's a great place to be."
-                : "Based on your answers, below are the 3 career directions that best match your profile and Kenya's 3-year outlook."}
+                : "Based on your answers, below are the 3 career directions that best match your profile and Kenya's 4-year outlook."}
             </p>
           </div>
 

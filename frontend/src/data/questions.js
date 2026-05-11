@@ -79,7 +79,7 @@ const QUESTIONS = [
         value: "solving_figuring",
       },
       {
-        label: "I enjoy building, making or fixing things with my hands — or expressing ideas creatively",
+        label: "I enjoy building, making or fixing things with my hands, or expressing ideas creatively",
         value: "creating_building",
       },
     ],
