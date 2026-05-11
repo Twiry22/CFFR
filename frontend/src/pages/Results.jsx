@@ -1,9 +1,8 @@
 /**
- * Results Page  v1.1
- * Shows top 3 recommendations always.
- * If student used dual-pick (exploratoryProfile=true), also shows:
- *   - exploratoryNote banner
- *   - 3 alternate recommendations (ranks 4–6)
+ * Results Page  v1.2
+ * v1.1 — Shows top 3 + alternates for dual-pick students
+ * v1.2 — Profile summary strip moved to below career cards
+ *         "3-year" → "4-year" in hero subtext
  */
 
 import ResultCard from "../components/ResultCard";
@@ -90,45 +89,7 @@ const Results = ({ result, onRetake }) => {
             </p>
           </div>
 
-          {/* Profile summary */}
-          <div style={{
-            display:             "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap:                 "16px",
-            marginBottom:        "48px",
-          }} className="fade-in-up">
-            {[
-              { label: "Personality",        value: studentProfile.personalityType },
-              { label: "Tech Readiness",     value: studentProfile.techReadiness },
-              { label: "Subject Breadth",    value: studentProfile.subjectBreadth },
-              { label: "Academic Alignment", value: studentProfile.academicAlignment },
-            ].map((item) => (
-              <div key={item.label} style={{ borderTop: "3px solid var(--royal-blue)", paddingTop: "14px" }}>
-                <p style={{
-                  fontSize:      "0.72rem",
-                  fontWeight:    "600",
-                  color:         "var(--text-light)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom:  "4px",
-                }}>
-                  {item.label}
-                </p>
-                <p style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: "700",
-                  fontSize:   "0.95rem",
-                  color:      "var(--text-dark)",
-                }}>
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ borderTop: "1px solid var(--border)", marginBottom: "40px" }} />
-
-          {/* Top 3 recommendations */}
+          {/* ── Top 3 recommendations — FIRST ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "32px", marginBottom: "48px" }}>
             {recommendations.map((rec) => (
               <ResultCard key={rec.rank} recommendation={rec} />
@@ -138,7 +99,6 @@ const Results = ({ result, onRetake }) => {
           {/* ── Exploratory section — only shown for dual-pick students ── */}
           {studentProfile.exploratoryProfile && alternateRecommendations?.length > 0 && (
             <>
-              {/* Exploratory note banner */}
               <div style={{
                 background:   "var(--royal-blue-pale)",
                 border:       "1px solid var(--royal-blue-mid)",
@@ -147,15 +107,15 @@ const Results = ({ result, onRetake }) => {
                 marginBottom: "32px",
               }} className="fade-in-up">
                 <p style={{
-                  fontFamily:   "var(--font-display)",
-                  fontWeight:   "700",
-                  fontSize:     "0.88rem",
-                  color:        "var(--royal-blue)",
-                  marginBottom: "6px",
-                  textTransform:"uppercase",
-                  letterSpacing:"0.05em",
+                  fontFamily:    "var(--font-display)",
+                  fontWeight:    "700",
+                  fontSize:      "0.88rem",
+                  color:         "var(--royal-blue)",
+                  marginBottom:  "6px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
                 }}>
-                 Also Worth Exploring
+                  Also Worth Exploring
                 </p>
                 <p style={{
                   fontSize:   "0.92rem",
@@ -166,7 +126,6 @@ const Results = ({ result, onRetake }) => {
                 </p>
               </div>
 
-              {/* Alternate cards */}
               <div style={{ display: "flex", flexDirection: "column", gap: "32px", marginBottom: "48px" }}>
                 {alternateRecommendations.map((rec) => (
                   <ResultCard key={rec.rank} recommendation={rec} isAlternate />
@@ -174,6 +133,57 @@ const Results = ({ result, onRetake }) => {
               </div>
             </>
           )}
+
+          <div style={{ borderTop: "1px solid var(--border)", marginBottom: "40px" }} />
+
+          {/* ── Profile summary — AFTER career cards ── */}
+          <div style={{ marginBottom: "48px" }} className="fade-in-up">
+            <p style={{
+              fontFamily:    "var(--font-display)",
+              fontWeight:    "700",
+              fontSize:      "0.78rem",
+              color:         "var(--text-light)",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom:  "20px",
+              textAlign:     "center",
+            }}>
+              Your Profile Summary
+            </p>
+            <div style={{
+              display:             "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap:                 "16px",
+            }}>
+              {[
+                { label: "Personality",        value: studentProfile.personalityType },
+                { label: "Tech Readiness",     value: studentProfile.techReadiness },
+                { label: "Subject Breadth",    value: studentProfile.subjectBreadth },
+                { label: "Academic Alignment", value: studentProfile.academicAlignment },
+              ].map((item) => (
+                <div key={item.label} style={{ borderTop: "3px solid var(--royal-blue)", paddingTop: "14px" }}>
+                  <p style={{
+                    fontSize:      "0.72rem",
+                    fontWeight:    "600",
+                    color:         "var(--text-light)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    marginBottom:  "4px",
+                  }}>
+                    {item.label}
+                  </p>
+                  <p style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: "700",
+                    fontSize:   "0.95rem",
+                    color:      "var(--text-dark)",
+                  }}>
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Disclaimer */}
           <p style={{
@@ -184,7 +194,7 @@ const Results = ({ result, onRetake }) => {
             maxWidth:   "600px",
             margin:     "0 auto 32px",
           }}>
-             {disclaimer}
+            {disclaimer}
           </p>
 
           {/* Retake */}

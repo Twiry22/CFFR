@@ -1,6 +1,7 @@
 /**
- * ScoreBreakdown Component  v2.0
- * Updated weights: Market 25%, Future 25%, Aptitude 25%, Interest 15%, Access 10%
+ * ScoreBreakdown Component  v2.1
+ * v2.0 — Weight labels added (25%/25%/25%/15%/10%)
+ * v2.1 — Weight labels removed from UI (scores only)
  */
 
 const SCORE_LABELS = {
@@ -8,7 +9,7 @@ const SCORE_LABELS = {
   futureRelevance: { label: "Future Relevance" },
   aptitude:        { label: "Aptitude"         },
   interest:        { label: "Interest"         },
-  accessibility:   { label: "Accessibility"   },
+  accessibility:   { label: "Accessibility"    },
 };
 
 const ScoreBreakdown = ({ scoreBreakdown }) => {
