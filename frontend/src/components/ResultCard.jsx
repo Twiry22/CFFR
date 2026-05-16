@@ -254,7 +254,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
               textTransform: "uppercase",
               letterSpacing: "0.05em",
             }}>
-              Kenya Outlook 2026–2029
+              Kenya Outlook 2026–2030
             </p>
             <p style={{
               fontSize:        "0.9rem",
