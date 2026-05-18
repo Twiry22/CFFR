@@ -1,10 +1,12 @@
 /**
- * Results Page  v1.2
+ * Results Page  v1.3
  * v1.1 — Shows top 3 + alternates for dual-pick students
  * v1.2 — Profile summary strip moved to below career cards
- *         "3-year" → "4-year" in hero subtext
+ * v1.3 — Email prompt modal added before retake
+ *         Intercepts both nav Retake and bottom Retake buttons
  */
 
+import { useState } from "react";
 import ResultCard from "../components/ResultCard";
 
 const Results = ({ result, onRetake }) => {
@@ -16,6 +18,58 @@ const Results = ({ result, onRetake }) => {
     disclaimer,
   } = result;
 
+  // ── Email modal state ─────────────────────────────────────────────────────
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email,          setEmail]          = useState("");
+  const [emailStatus,    setEmailStatus]    = useState("idle"); // idle | sending | sent | error
+  const [emailMessage,   setEmailMessage]   = useState("");
+
+  // ── Intercept retake — show modal first ───────────────────────────────────
+  const handleRetakeClick = () => setShowEmailModal(true);
+
+  const handleSkip = () => {
+    setShowEmailModal(false);
+    onRetake();
+  };
+
+  const handleSendEmail = async () => {
+    const clean = email.trim().toLowerCase();
+    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      setEmailMessage("Please enter a valid email address.");
+      return;
+    }
+
+    setEmailStatus("sending");
+    setEmailMessage("");
+
+    try {
+      const res = await fetch("/api/results/email", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: clean, recommendations }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setEmailStatus("sent");
+        setEmailMessage(`Results sent to ${clean}. Check your inbox!`);
+        // Proceed to retake after 2 seconds
+        setTimeout(() => {
+          setShowEmailModal(false);
+          onRetake();
+        }, 2000);
+      } else {
+        setEmailStatus("error");
+        setEmailMessage("Could not send email. You can still retake the assessment.");
+      }
+    } catch {
+      setEmailStatus("error");
+      setEmailMessage("Could not reach the server. You can still retake the assessment.");
+    }
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div style={{
       minHeight:     "100vh",
@@ -23,6 +77,165 @@ const Results = ({ result, onRetake }) => {
       display:       "flex",
       flexDirection: "column",
     }}>
+
+      {/* ── Email Modal ── */}
+      {showEmailModal && (
+        <div style={{
+          position:        "fixed",
+          inset:           0,
+          background:      "rgba(0,0,0,0.45)",
+          display:         "flex",
+          alignItems:      "center",
+          justifyContent:  "center",
+          zIndex:          1000,
+          padding:         "24px",
+        }}>
+          <div style={{
+            background:   "var(--white)",
+            borderRadius: "var(--radius-lg)",
+            padding:      "40px 36px",
+            maxWidth:     "420px",
+            width:        "100%",
+            boxShadow:    "var(--shadow-lg)",
+            textAlign:    "center",
+          }} className="fade-in-up">
+
+            {/* Icon */}
+            <div style={{
+              width:          "56px",
+              height:         "56px",
+              borderRadius:   "50%",
+              background:     "var(--royal-blue-pale)",
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              margin:         "0 auto 20px",
+              fontSize:       "1.6rem",
+            }}>
+              📩
+            </div>
+
+            <h3 style={{
+              fontFamily:   "var(--font-display)",
+              fontSize:     "1.2rem",
+              fontWeight:   "800",
+              color:        "var(--text-dark)",
+              marginBottom: "8px",
+            }}>
+              Save your results
+            </h3>
+
+            <p style={{
+              fontSize:     "0.9rem",
+              color:        "var(--text-mid)",
+              lineHeight:   "1.6",
+              marginBottom: "28px",
+            }}>
+              Would you like your career results emailed to you?
+              Useful if you're on someone else's phone or device.
+            </p>
+
+            {/* Sent state */}
+            {emailStatus === "sent" ? (
+              <div style={{
+                background:   "var(--success-pale)",
+                borderRadius: "var(--radius-md)",
+                padding:      "16px",
+                marginBottom: "16px",
+              }}>
+                <p style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: "700",
+                  color:      "var(--success)",
+                  fontSize:   "0.9rem",
+                }}>
+                  ✅ {emailMessage}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Email input */}
+                <div style={{ marginBottom: "12px", textAlign: "left" }}>
+                  <label style={{
+                    display:      "block",
+                    fontSize:     "0.8rem",
+                    fontWeight:   "700",
+                    color:        "var(--text-dark)",
+                    marginBottom: "6px",
+                    fontFamily:   "var(--font-display)",
+                  }}>
+                    Your email address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="e.g. yourname@gmail.com"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setEmailMessage(""); }}
+                    onKeyDown={(e) => e.key === "Enter" && handleSendEmail()}
+                    disabled={emailStatus === "sending"}
+                    style={{
+                      width:        "100%",
+                      padding:      "13px 16px",
+                      borderRadius: "var(--radius-md)",
+                      border:       "2px solid var(--border)",
+                      fontSize:     "1rem",
+                      fontFamily:   "var(--font-body)",
+                      outline:      "none",
+                      boxSizing:    "border-box",
+                      opacity:      emailStatus === "sending" ? 0.6 : 1,
+                    }}
+                    onFocus={(e) => e.target.style.border = "2px solid var(--royal-blue)"}
+                    onBlur={(e)  => e.target.style.border = "2px solid var(--border)"}
+                  />
+                </div>
+
+                {/* Error / validation message */}
+                {emailMessage && emailStatus !== "sent" && (
+                  <p style={{
+                    fontSize:     "0.82rem",
+                    color:        "var(--error)",
+                    textAlign:    "left",
+                    marginBottom: "12px",
+                  }}>
+                    ⚠️ {emailMessage}
+                  </p>
+                )}
+
+                {/* Send button */}
+                <button
+                  className="btn-primary"
+                  onClick={handleSendEmail}
+                  disabled={emailStatus === "sending"}
+                  style={{ width: "100%", marginBottom: "12px", opacity: emailStatus === "sending" ? 0.7 : 1 }}
+                >
+                  {emailStatus === "sending" ? "Sending..." : "Send my results →"}
+                </button>
+              </>
+            )}
+
+            {/* Skip */}
+            {emailStatus !== "sent" && (
+              <button
+                onClick={handleSkip}
+                style={{
+                  width:        "100%",
+                  padding:      "12px",
+                  background:   "transparent",
+                  border:       "none",
+                  color:        "var(--text-light)",
+                  fontSize:     "0.85rem",
+                  fontFamily:   "var(--font-body)",
+                  cursor:       "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                Skip — just retake the assessment
+              </button>
+            )}
+
+          </div>
+        </div>
+      )}
 
       {/* Nav */}
       <nav style={{
@@ -46,7 +259,7 @@ const Results = ({ result, onRetake }) => {
           </span>
         </div>
         <button
-          onClick={onRetake}
+          onClick={handleRetakeClick}
           style={{
             background:   "none",
             border:       "1px solid var(--border)",
@@ -89,14 +302,14 @@ const Results = ({ result, onRetake }) => {
             </p>
           </div>
 
-          {/* ── Top 3 recommendations — FIRST ── */}
+          {/* Top 3 recommendations */}
           <div style={{ display: "flex", flexDirection: "column", gap: "32px", marginBottom: "48px" }}>
             {recommendations.map((rec) => (
               <ResultCard key={rec.rank} recommendation={rec} />
             ))}
           </div>
 
-          {/* ── Exploratory section — only shown for dual-pick students ── */}
+          {/* Exploratory section */}
           {studentProfile.exploratoryProfile && alternateRecommendations?.length > 0 && (
             <>
               <div style={{
@@ -136,7 +349,7 @@ const Results = ({ result, onRetake }) => {
 
           <div style={{ borderTop: "1px solid var(--border)", marginBottom: "40px" }} />
 
-          {/* ── Profile summary — AFTER career cards ── */}
+          {/* Profile summary */}
           <div style={{ marginBottom: "48px" }} className="fade-in-up">
             <p style={{
               fontFamily:    "var(--font-display)",
@@ -197,9 +410,9 @@ const Results = ({ result, onRetake }) => {
             {disclaimer}
           </p>
 
-          {/* Retake */}
+          {/* Retake button */}
           <div style={{ maxWidth: "320px", margin: "0 auto" }}>
-            <button className="btn-secondary" onClick={onRetake}>
+            <button className="btn-secondary" onClick={handleRetakeClick}>
               ↩ Retake the Assessment
             </button>
           </div>
