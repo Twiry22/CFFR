@@ -14,6 +14,9 @@ const exportRouter = require("./routes/export");   // ← NEW
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
+const emailRouter = require("./routes/email");
+// ...
+app.use("/api/results", emailRouter);
 
 // ─── Security: HTTP Headers ───────────────────────────────────────────────────
 app.use(helmet({
