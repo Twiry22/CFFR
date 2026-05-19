@@ -34,10 +34,18 @@ const router     = express.Router();
 
 const createTransporter = () =>
   nodemailer.createTransport({
-    service: "gmail",
+    host:   "smtp.gmail.com",
+    port:   587,          // 587 (STARTTLS) — Render blocks 465 (SSL)
+    secure: false,        // false = STARTTLS on port 587
     auth: {
-      user: process.env.GMAIL_USER,  // ← Render env: your Gmail address
-      pass: process.env.GMAIL_PASS,  // ← Render env: Gmail App Password
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout:   10000,
+    socketTimeout:     15000,
+    tls: {
+      rejectUnauthorized: false,  // avoids cert issues on Render
     },
   });
 
@@ -67,7 +75,7 @@ const buildEmailHtml = (recommendations) => {
       </p>
 
       <p style="font-size:12px;color:#16a34a;font-weight:700;margin:0 0 16px 0;">
-       Recommended Pathway: <span style="font-weight:400;color:#334155;">${rec.sssPathway}</span>
+        🎓 Recommended Pathway: <span style="font-weight:400;color:#334155;">${rec.sssPathway}</span>
       </p>
 
       ${rec.recommendedSchools && rec.recommendedSchools.length > 0 ? `
@@ -101,13 +109,13 @@ const buildEmailHtml = (recommendations) => {
 
     <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
       <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 6px 0;">Your Career Results</h1>
-      <p style="color:#bfdbfe;font-size:13px;margin:0;">Career Fit & Future Readiness — Kenya's Best Career Guidance</p>
+      <p style="color:#bfdbfe;font-size:13px;margin:0;">Career Fit & Future Readiness — Kenya CBC Career Guidance</p>
     </div>
 
     <div style="background:#f8fafc;padding:28px 24px;border-radius:0 0 12px 12px;">
       <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 24px 0;">
-        Here are your top career matches based on Kenya's 4-year outlook, your interests and aptitude.
-        Keep this email; share it with a parent, teacher or career counsellor.
+        Here are your top career matches based on your interests, aptitude, and Kenya's 4-year outlook.
+        Keep this email — share it with a parent, teacher, or career counsellor.
       </p>
 
       ${cards}
@@ -115,7 +123,7 @@ const buildEmailHtml = (recommendations) => {
       <div style="background:#eff6ff;border-radius:8px;padding:16px 20px;margin-top:8px;">
         <p style="font-size:12px;color:#475569;line-height:1.6;margin:0;">
           <strong style="color:#1e40af;">CFFR is a directional tool, not a final verdict.</strong>
-          Your interests will grow and change, therefore consider retaking this assessment at key points in your education.
+          Your interests will grow and change — consider retaking this assessment at key points in your education.
           Visit <a href="https://cffr.projectdatahub.org" style="color:#1e40af;">cffr.projectdatahub.org</a> anytime.
         </p>
       </div>
@@ -154,7 +162,7 @@ router.post("/email", async (req, res) => {
     await transporter.sendMail({
       from:    `"CFFR Career Guidance" <${process.env.GMAIL_USER}>`,
       to:      email,
-      subject: "Your CFFR Career Results — Career Guidance",
+      subject: "Your CFFR Career Results — Kenya CBC Career Guidance",
       html:    buildEmailHtml(recommendations),
     });
 
