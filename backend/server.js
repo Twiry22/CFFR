@@ -10,13 +10,15 @@ const cors         = require("cors");
 const rateLimit    = require("express-rate-limit");
 const assessRouter = require("./routes/assess");
 const payRouter    = require("./routes/pay");
-const exportRouter = require("./routes/export");   // ← NEW
+const exportRouter = require("./routes/export");
+const emailRouter  = require("./routes/email");    // ← email route
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
-const emailRouter = require("./routes/email");
-// ...
-app.use("/api/results", emailRouter);
+
+// ─── Trust Render's proxy ─────────────────────────────────────────────────────
+// Required on Render — fixes the X-Forwarded-For rate limiter warning
+app.set("trust proxy", 1);
 
 // ─── Security: HTTP Headers ───────────────────────────────────────────────────
 app.use(helmet({
@@ -66,13 +68,14 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // ─── Body Parsing ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: false, limit: "10kb" }));
+app.use(express.json({ limit: "50kb" }));  // raised from 10kb — results payload can be large
+app.use(express.urlencoded({ extended: false, limit: "50kb" }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use("/api",        assessRouter);
-app.use("/api/pay",    payRouter);
-app.use("/api/export", exportRouter);   // ← NEW
+app.use("/api",          assessRouter);
+app.use("/api/pay",      payRouter);
+app.use("/api/export",   exportRouter);
+app.use("/api/results",  emailRouter);    // ← email route registered HERE (after body parsing)
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 app.get("/", (_req, res) => {
@@ -83,9 +86,10 @@ app.get("/", (_req, res) => {
       health:        "GET  /api/health",
       assess:        "POST /api/assess",
       pay:           "POST /api/pay",
-      payCallback:   "POST /api/pay/callback",
-      payStatus:     "GET  /api/pay/status/:checkoutId",
+      payCallback:   "GET  /api/pay/callback",
+      payStatus:     "GET  /api/pay/status/:ref",
       exportRecords: "GET  /api/export/records",
+      emailResults:  "POST /api/results/email",
     },
   });
 });
@@ -114,7 +118,8 @@ app.listen(PORT, () => {
   ║  Server running on  → http://localhost:${PORT}          ║
   ║  Health check       → GET  /api/health               ║
   ║  Assessment         → POST /api/assess               ║
-  ║  Mpesa Pay          → POST /api/pay                  ║
+  ║  Payment            → POST /api/pay                  ║
+  ║  Email Results      → POST /api/results/email        ║
   ║  Export Records     → GET  /api/export/records       ║
   ╚══════════════════════════════════════════════════════╝
   `);

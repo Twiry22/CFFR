@@ -67,7 +67,7 @@ const buildEmailHtml = (recommendations) => {
       </p>
 
       <p style="font-size:12px;color:#16a34a;font-weight:700;margin:0 0 16px 0;">
-        🎓 Recommended Pathway: <span style="font-weight:400;color:#334155;">${rec.sssPathway}</span>
+       Recommended Pathway: <span style="font-weight:400;color:#334155;">${rec.sssPathway}</span>
       </p>
 
       ${rec.recommendedSchools && rec.recommendedSchools.length > 0 ? `
