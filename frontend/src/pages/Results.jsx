@@ -142,7 +142,7 @@ const Results = ({ result, onRetake }) => {
               margin:         "0 auto 20px",
               fontSize:       "1.6rem",
             }}>
-              📩
+              
             </div>
 
             <h3 style={{
