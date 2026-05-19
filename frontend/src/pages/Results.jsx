@@ -6,7 +6,7 @@
  *         Intercepts both nav Retake and bottom Retake buttons
  */
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ResultCard from "../components/ResultCard";
 
 const Results = ({ result, onRetake }) => {
@@ -23,6 +23,33 @@ const Results = ({ result, onRetake }) => {
   const [email,          setEmail]          = useState("");
   const [emailStatus,    setEmailStatus]    = useState("idle"); // idle | sending | sent | error
   const [emailMessage,   setEmailMessage]   = useState("");
+
+  // ── Intercept browser back button and page refresh ───────────────────────
+  useEffect(() => {
+    // Push a history entry so back button triggers popstate instead of leaving
+    window.history.pushState({ cffr: "results" }, "");
+
+    const handlePopState = (e) => {
+      // Back button pressed — show email modal instead of navigating away
+      window.history.pushState({ cffr: "results" }, ""); // re-push to keep catching
+      setShowEmailModal(true);
+    };
+
+    const handleBeforeUnload = (e) => {
+      // Refresh or close tab — browser will show its own warning
+      // We show our modal first on back, browser handles refresh natively
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("popstate",      handlePopState);
+    window.addEventListener("beforeunload",  handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate",     handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   // ── Intercept retake — show modal first ───────────────────────────────────
   const handleRetakeClick = () => setShowEmailModal(true);
@@ -43,7 +70,10 @@ const Results = ({ result, onRetake }) => {
     setEmailMessage("");
 
     try {
-      const res = await fetch("/api/results/email", {
+      // Backend URL — set VITE_API_URL in your frontend .env / Render env vars
+      // e.g. VITE_API_URL=https://cffr-backend.onrender.com
+      const backendUrl = import.meta.env.VITE_API_URL || "https://cffr-backend.onrender.com";
+      const res = await fetch(`${backendUrl}/api/results/email`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: clean, recommendations }),
