@@ -1,12 +1,12 @@
 /**
- * Results Page  v1.3
+ * Results Page  v1.4
  * v1.1 — Shows top 3 + alternates for dual-pick students
  * v1.2 — Profile summary strip moved to below career cards
  * v1.3 — Email prompt modal added before retake
- *         Intercepts both nav Retake and bottom Retake buttons
+ * v1.4 — Email prompt modal removed (temporarily disabled)
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import ResultCard from "../components/ResultCard";
 
 const Results = ({ result, onRetake }) => {
@@ -18,86 +18,15 @@ const Results = ({ result, onRetake }) => {
     disclaimer,
   } = result;
 
-  // ── Email modal state ─────────────────────────────────────────────────────
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [email,          setEmail]          = useState("");
-  const [emailStatus,    setEmailStatus]    = useState("idle"); // idle | sending | sent | error
-  const [emailMessage,   setEmailMessage]   = useState("");
-
-  // ── Intercept browser back button and page refresh ───────────────────────
+  // ── Intercept browser refresh / tab close ────────────────────────────────
   useEffect(() => {
-    // Push a history entry so back button triggers popstate instead of leaving
-    window.history.pushState({ cffr: "results" }, "");
-
-    const handlePopState = (e) => {
-      // Back button pressed — show email modal instead of navigating away
-      window.history.pushState({ cffr: "results" }, ""); // re-push to keep catching
-      setShowEmailModal(true);
-    };
-
     const handleBeforeUnload = (e) => {
-      // Refresh or close tab — browser will show its own warning
-      // We show our modal first on back, browser handles refresh natively
       e.preventDefault();
       e.returnValue = "";
     };
-
-    window.addEventListener("popstate",      handlePopState);
-    window.addEventListener("beforeunload",  handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("popstate",     handlePopState);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
-
-  // ── Intercept retake — show modal first ───────────────────────────────────
-  const handleRetakeClick = () => setShowEmailModal(true);
-
-  const handleSkip = () => {
-    setShowEmailModal(false);
-    onRetake();
-  };
-
-  const handleSendEmail = async () => {
-    const clean = email.trim().toLowerCase();
-    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-      setEmailMessage("Please enter a valid email address.");
-      return;
-    }
-
-    setEmailStatus("sending");
-    setEmailMessage("");
-
-    try {
-      // Backend URL — set VITE_API_URL in your frontend .env / Render env vars
-      // e.g. VITE_API_URL=https://cffr-backend.onrender.com
-      const backendUrl = import.meta.env.VITE_API_URL || "https://cffr-backend.onrender.com";
-      const res = await fetch(`${backendUrl}/api/results/email`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email: clean, recommendations }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setEmailStatus("sent");
-        setEmailMessage(`Results sent to ${clean}. Check your inbox!`);
-        // Proceed to retake after 2 seconds
-        setTimeout(() => {
-          setShowEmailModal(false);
-          onRetake();
-        }, 2000);
-      } else {
-        setEmailStatus("error");
-        setEmailMessage("Could not send email. You can still retake the assessment.");
-      }
-    } catch {
-      setEmailStatus("error");
-      setEmailMessage("Could not reach the server. You can still retake the assessment.");
-    }
-  };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -107,165 +36,6 @@ const Results = ({ result, onRetake }) => {
       display:       "flex",
       flexDirection: "column",
     }}>
-
-      {/* ── Email Modal ── */}
-      {showEmailModal && (
-        <div style={{
-          position:        "fixed",
-          inset:           0,
-          background:      "rgba(0,0,0,0.45)",
-          display:         "flex",
-          alignItems:      "center",
-          justifyContent:  "center",
-          zIndex:          1000,
-          padding:         "24px",
-        }}>
-          <div style={{
-            background:   "var(--white)",
-            borderRadius: "var(--radius-lg)",
-            padding:      "40px 36px",
-            maxWidth:     "420px",
-            width:        "100%",
-            boxShadow:    "var(--shadow-lg)",
-            textAlign:    "center",
-          }} className="fade-in-up">
-
-            {/* Icon */}
-            <div style={{
-              width:          "56px",
-              height:         "56px",
-              borderRadius:   "50%",
-              background:     "var(--royal-blue-pale)",
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-              margin:         "0 auto 20px",
-              fontSize:       "1.6rem",
-            }}>
-              
-            </div>
-
-            <h3 style={{
-              fontFamily:   "var(--font-display)",
-              fontSize:     "1.2rem",
-              fontWeight:   "800",
-              color:        "var(--text-dark)",
-              marginBottom: "8px",
-            }}>
-              Save your results
-            </h3>
-
-            <p style={{
-              fontSize:     "0.9rem",
-              color:        "var(--text-mid)",
-              lineHeight:   "1.6",
-              marginBottom: "28px",
-            }}>
-              Would you like your career results emailed to you?
-              Useful if you're on someone else's phone or device.
-            </p>
-
-            {/* Sent state */}
-            {emailStatus === "sent" ? (
-              <div style={{
-                background:   "var(--success-pale)",
-                borderRadius: "var(--radius-md)",
-                padding:      "16px",
-                marginBottom: "16px",
-              }}>
-                <p style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: "700",
-                  color:      "var(--success)",
-                  fontSize:   "0.9rem",
-                }}>
-                  ✅ {emailMessage}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Email input */}
-                <div style={{ marginBottom: "12px", textAlign: "left" }}>
-                  <label style={{
-                    display:      "block",
-                    fontSize:     "0.8rem",
-                    fontWeight:   "700",
-                    color:        "var(--text-dark)",
-                    marginBottom: "6px",
-                    fontFamily:   "var(--font-display)",
-                  }}>
-                    Your email address
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="e.g. yourname@gmail.com"
-                    value={email}
-                    onChange={(e) => { setEmail(e.target.value); setEmailMessage(""); }}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendEmail()}
-                    disabled={emailStatus === "sending"}
-                    style={{
-                      width:        "100%",
-                      padding:      "13px 16px",
-                      borderRadius: "var(--radius-md)",
-                      border:       "2px solid var(--border)",
-                      fontSize:     "1rem",
-                      fontFamily:   "var(--font-body)",
-                      outline:      "none",
-                      boxSizing:    "border-box",
-                      opacity:      emailStatus === "sending" ? 0.6 : 1,
-                    }}
-                    onFocus={(e) => e.target.style.border = "2px solid var(--royal-blue)"}
-                    onBlur={(e)  => e.target.style.border = "2px solid var(--border)"}
-                  />
-                </div>
-
-                {/* Error / validation message */}
-                {emailMessage && emailStatus !== "sent" && (
-                  <p style={{
-                    fontSize:     "0.82rem",
-                    color:        "var(--error)",
-                    textAlign:    "left",
-                    marginBottom: "12px",
-                  }}>
-                    ⚠️ {emailMessage}
-                  </p>
-                )}
-
-                {/* Send button */}
-                <button
-                  className="btn-primary"
-                  onClick={handleSendEmail}
-                  disabled={emailStatus === "sending"}
-                  style={{ width: "100%", marginBottom: "12px", opacity: emailStatus === "sending" ? 0.7 : 1 }}
-                >
-                  {emailStatus === "sending" ? "Sending..." : "Send my results →"}
-                </button>
-              </>
-            )}
-
-            {/* Skip */}
-            {emailStatus !== "sent" && (
-              <button
-                onClick={handleSkip}
-                style={{
-                  width:        "100%",
-                  padding:      "12px",
-                  background:   "transparent",
-                  border:       "none",
-                  color:        "var(--text-light)",
-                  fontSize:     "0.85rem",
-                  fontFamily:   "var(--font-body)",
-                  cursor:       "pointer",
-                  textDecoration: "underline",
-                }}
-              >
-                Skip — just retake the assessment
-              </button>
-            )}
-
-          </div>
-        </div>
-      )}
 
       {/* Nav */}
       <nav style={{
@@ -289,7 +59,7 @@ const Results = ({ result, onRetake }) => {
           </span>
         </div>
         <button
-          onClick={handleRetakeClick}
+          onClick={onRetake}
           style={{
             background:   "none",
             border:       "1px solid var(--border)",
@@ -442,7 +212,7 @@ const Results = ({ result, onRetake }) => {
 
           {/* Retake button */}
           <div style={{ maxWidth: "320px", margin: "0 auto" }}>
-            <button className="btn-secondary" onClick={handleRetakeClick}>
+            <button className="btn-secondary" onClick={onRetake}>
               ↩ Retake the Assessment
             </button>
           </div>
