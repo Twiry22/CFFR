@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react";
-import AccessGate  from "./components/AccessGate";
+import AccessGate  from "./components/accessgate";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
