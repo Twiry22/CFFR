@@ -1,37 +1,52 @@
 /**
- * AccessGate Component
- * Simple access code screen shown before the app loads.
- * Only users with the correct code can proceed.
+ * AccessGate Component  v1.1
+ * Validates access codes against the backend — one-time use only.
+ * Once a code is used, it cannot be used again by anyone.
  */
 
 import { useState } from "react";
 
-// ─── Access codes — add or remove codes here ──────────────────────────────────
-// Each code is linked to a tester name for your records
-const VALID_CODES = {
-  "CFFR-T1": "Tester 1",
-  "CFFR-T2": "Tester 2",
-  "CFFR-T3": "Tester 3",
-  "CFFR-T4": "Tester 4",
-};
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const AccessGate = ({ onUnlock }) => {
-  const [code, setCode]       = useState("");
-  const [error, setError]     = useState("");
-  const [shaking, setShaking] = useState(false);
+  const [code, setCode]         = useState("");
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [shaking, setShaking]   = useState(false);
 
-  const handleSubmit = () => {
-    const trimmed = code.trim().toUpperCase();
+  const handleSubmit = async () => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
 
-    if (VALID_CODES[trimmed]) {
-      // Valid code — pass the tester name through
-      onUnlock(VALID_CODES[trimmed]);
-    } else {
-      // Wrong code — shake and show error
-      setError("That code isn't valid. Please check with your administrator.");
+    setLoading(true);
+    setError("");
+
+    try {
+      const res  = await fetch(`${API_BASE}/api/validate-code`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ code: trimmed }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Code valid and now burned — let them in
+        onUnlock(data.name);
+      } else {
+        // Invalid or already used
+        setError(data.message);
+        setShaking(true);
+        setTimeout(() => setShaking(false), 500);
+        setCode("");
+      }
+
+    } catch {
+      setError("Could not reach the server. Please check your connection.");
       setShaking(true);
       setTimeout(() => setShaking(false), 500);
-      setCode("");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,13 +56,13 @@ const AccessGate = ({ onUnlock }) => {
 
   return (
     <div style={{
-      minHeight:       "100vh",
-      background:      "var(--white)",
-      display:         "flex",
-      flexDirection:   "column",
-      alignItems:      "center",
-      justifyContent:  "center",
-      padding:         "24px",
+      minHeight:      "100vh",
+      background:     "var(--white)",
+      display:        "flex",
+      flexDirection:  "column",
+      alignItems:     "center",
+      justifyContent: "center",
+      padding:        "24px",
     }}>
 
       {/* Card */}
@@ -106,23 +121,25 @@ const AccessGate = ({ onUnlock }) => {
           onKeyDown={handleKeyDown}
           placeholder="Enter access code"
           autoFocus
+          disabled={loading}
           style={{
-            width:        "100%",
-            padding:      "14px 18px",
-            borderRadius: "var(--radius-md)",
-            border:       error
+            width:         "100%",
+            padding:       "14px 18px",
+            borderRadius:  "var(--radius-md)",
+            border:        error
               ? "2px solid var(--error)"
               : "2px solid var(--border)",
-            fontSize:     "1rem",
-            fontFamily:   "var(--font-body)",
-            color:        "var(--text-dark)",
-            textAlign:    "center",
-            letterSpacing:"0.12em",
-            textTransform:"uppercase",
-            outline:      "none",
-            marginBottom: "12px",
-            boxSizing:    "border-box",
-            transition:   "border 0.2s ease",
+            fontSize:      "1rem",
+            fontFamily:    "var(--font-body)",
+            color:         "var(--text-dark)",
+            textAlign:     "center",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            outline:       "none",
+            marginBottom:  "12px",
+            boxSizing:     "border-box",
+            transition:    "border 0.2s ease",
+            opacity:       loading ? 0.6 : 1,
           }}
         />
 
@@ -142,10 +159,10 @@ const AccessGate = ({ onUnlock }) => {
         <button
           className="btn-primary"
           onClick={handleSubmit}
-          disabled={code.trim() === ""}
+          disabled={code.trim() === "" || loading}
           style={{ marginTop: "8px" }}
         >
-          Enter →
+          {loading ? "Checking..." : "Enter →"}
         </button>
 
         {/* Footer note */}
@@ -155,7 +172,8 @@ const AccessGate = ({ onUnlock }) => {
           marginTop:  "24px",
           lineHeight: "1.6",
         }}>
-          Don't have a code? Contact the CFFR administrator.
+          Each access code is single-use only.
+          Contact the CFFR administrator for a code.
         </p>
 
       </div>
