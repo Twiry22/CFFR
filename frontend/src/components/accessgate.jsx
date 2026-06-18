@@ -12,6 +12,7 @@ const VALID_CODES = {
   "CFFR-T1": "Tester 1",
   "CFFR-T2": "Tester 2",
   "CFFR-T3": "Tester 3",
+  "CFFR-T4": "Tester 4",
 };
 
 const AccessGate = ({ onUnlock }) => {
