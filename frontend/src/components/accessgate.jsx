@@ -74,7 +74,6 @@ const AccessGate = ({ onUnlock }) => {
           margin:         "0 auto 24px",
           fontSize:       "28px",
         }}>
-          🔒
         </div>
 
         {/* Title */}
@@ -95,7 +94,6 @@ const AccessGate = ({ onUnlock }) => {
           lineHeight:   "1.6",
           marginBottom: "32px",
         }}>
-          This tool is currently in private testing.
           Enter your access code to continue.
         </p>
 
