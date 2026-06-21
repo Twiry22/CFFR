@@ -28,6 +28,8 @@ const DEFAULT_CODES = {
   "CFFR-T2": { name: "Tester 2", used: false, usedAt: null },
   "CFFR-T3": { name: "Tester 3", used: false, usedAt: null },
   "CFFR-T4": { name: "Tester 4", used: false, usedAt: null },
+  "CFFR-T5": { name: "Tester 5", used: false, usedAt: null },
+  "CFFR-T6": { name: "Tester 6", used: false, usedAt: null },
 };
 
 // Initialise codes file if it doesn't exist
