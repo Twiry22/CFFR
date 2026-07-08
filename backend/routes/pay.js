@@ -10,8 +10,7 @@ const express = require("express");
 const axios   = require("axios");
 const router  = express.Router();
 
-// ─── Credentials — set ALL of these in Render environment variables ───────────
-// ***NEVER hardcode real credentials here***
+// Credentials — set ALL of these in Render environment variables
 
 const CONSUMER_KEY    = process.env.PESAPAL_CONSUMER_KEY;     // ***YOUR_PESAPAL_CONSUMER_KEY***
 const CONSUMER_SECRET = process.env.PESAPAL_CONSUMER_SECRET;  // ***YOUR_PESAPAL_CONSUMER_SECRET***

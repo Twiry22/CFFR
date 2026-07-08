@@ -1,0 +1,42 @@
+{
+  "CFFR-T1": {
+    "name": "Tester 1",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T2": {
+    "name": "Tester 2",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T3": {
+    "name": "Tester 3",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T4": {
+    "name": "Tester 4",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T5": {
+    "name": "Tester 5",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T107": {
+    "name": "Tester 107",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T19": {
+    "name": "Tester 19",
+    "used": false,
+    "usedAt": null
+  },
+  "CFFR-T26": {
+    "name": "Tester 26",
+    "used": false,
+    "usedAt": null
+  }
+}

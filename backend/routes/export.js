@@ -5,6 +5,11 @@
  *
  * Records are stored in memory + backed up to a local JSON file on the server.
  * This means data survives Render restarts (file persists on disk).
+ *
+ * v2.1 — Only change from v2.0: saveRecord() is now also exported as a named
+ *        function (router.saveRecord) so other routes (like assess.js) can
+ *        call it directly in-process instead of duplicating storage logic.
+ *        No existing endpoint, storage behaviour, or auth was changed.
  */
 
 const express = require("express");
@@ -40,6 +45,26 @@ const saveToDisk = () => {
   }
 };
 
+// ─── Shared save logic (used by both the HTTP route and direct calls) ────────
+const saveRecord = (answers, recommendations) => {
+  const record = {
+    id:              `cffr_${Date.now()}`,
+    timestamp:       new Date().toISOString(),
+    answers,
+    recommendations: (recommendations || []).slice(0, 3).map((r) => ({
+      rank:        r.rank,
+      clusterName: r.clusterName,
+      matchScore:  r.matchScore,
+    })),
+  };
+
+  records.push(record);
+  saveToDisk();
+
+  console.log(`[CFFR Export] Record saved. Total: ${records.length}`);
+  return record;
+};
+
 // ─── POST /api/export/save ────────────────────────────────────────────────────
 // Called internally by the assess route after a successful assessment.
 router.post("/save", (req, res) => {
@@ -50,21 +75,7 @@ router.post("/save", (req, res) => {
       return res.status(400).json({ success: false, message: "Missing answers or recommendations." });
     }
 
-    const record = {
-      id:              `cffr_${Date.now()}`,
-      timestamp:       new Date().toISOString(),
-      answers,
-      recommendations: recommendations.slice(0, 3).map((r) => ({
-        rank:        r.rank,
-        clusterName: r.clusterName,
-        matchScore:  r.matchScore,
-      })),
-    };
-
-    records.push(record);
-    saveToDisk();
-
-    console.log(`[CFFR Export] Record saved. Total: ${records.length}`);
+    saveRecord(answers, recommendations);
     return res.status(200).json({ success: true, message: "Record saved." });
 
   } catch (err) {
@@ -94,3 +105,4 @@ router.get("/records", (req, res) => {
 });
 
 module.exports = router;
+module.exports.saveRecord = saveRecord;
