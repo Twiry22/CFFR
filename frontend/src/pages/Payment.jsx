@@ -1,35 +1,20 @@
-/**
- * Payment.jsx  v2.1 — Pesapal
- * ─────────────────────────────────────────────────────────────────────────────
- * v2.0 — Pesapal integration
- * v2.1 — Fee updated to KES 250
- *
- * Flow:
- * 1. Student enters phone + optional email
- * 2. Frontend calls /api/pay/initiate → gets Pesapal redirect URL
- * 3. Student is redirected to Pesapal's hosted payment page
- * 4. Student pays (Mpesa, Airtel, card, bank — their choice)
- * 5. Pesapal redirects back to frontend with ?payment=success&ref=CFFR-xxx
- * 6. Frontend detects success and proceeds to assessment
- */
-
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
 const Payment = ({ onPaid }) => {
   const [phone,    setPhone]    = useState("");
   const [email,    setEmail]    = useState("");
-  const [step,     setStep]     = useState("form");   // "form" | "redirecting" | "waiting" | "error"
+  const [step,     setStep]     = useState("form");   // "form"  "redirecting"  "waiting"  "error"
   const [message,  setMessage]  = useState("");
   const [orderRef, setOrderRef] = useState(null);
 
-  // ── Check URL params — bypass or Pesapal return ───────────────────────────
+  // Check URL params; bypass or Pesapal return
   useEffect(() => {
     const params  = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
     const ref     = params.get("ref");
 
-    // ── Owner bypass — access via ?bypass=cffr-admin-2025 ────────────────────
+    // Owner bypass; access via ?bypass=cffr-admin-2025
     if (params.get("bypass") === "cffr-admin-2025") {
       window.history.replaceState({}, "", window.location.pathname);
       onPaid();
@@ -48,7 +33,7 @@ const Payment = ({ onPaid }) => {
     }
   }, []);
 
-  // ── Initiate payment ──────────────────────────────────────────────────────
+  // Initiate payment 
   const handlePay = async () => {
     const cleanPhone = phone.replace(/\s+/g, "");
     const cleanEmail = email.trim();
@@ -85,7 +70,7 @@ const Payment = ({ onPaid }) => {
 
     } catch (err) {
       setStep("error");
-      setMessage(err.response?.data?.message || "Could not reach payment server. Please try again.");
+      setMessage(err.response?.data?.message || "Could not complete payment. Please try again.");
     }
   };
 
@@ -95,7 +80,7 @@ const Payment = ({ onPaid }) => {
     setOrderRef(null);
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // Render
   return (
     <div style={{
       minHeight:      "100vh",
@@ -128,7 +113,6 @@ const Payment = ({ onPaid }) => {
           margin:         "0 auto 24px",
           fontSize:       "1.8rem",
         }}>
-          💳
         </div>
 
         <h2 style={{
@@ -268,13 +252,13 @@ const Payment = ({ onPaid }) => {
               marginTop:  "14px",
               lineHeight: "1.5",
             }}>
-              🔒 Powered by Pesapal. You will be redirected to a secure
+              Powered by Pesapal. You will be redirected to a secure
               payment page. Pay via Mpesa, Airtel Money, Visa, or bank transfer.
             </p>
           </>
         )}
 
-        {/* ── REDIRECTING ── */}
+        {/* REDIRECTING */}
         {step === "redirecting" && (
           <div style={{ padding: "16px 0" }}>
             <div className="spinner" style={{ margin: "0 auto 20px" }} />
@@ -292,7 +276,7 @@ const Payment = ({ onPaid }) => {
           </div>
         )}
 
-        {/* ── WAITING (returned from Pesapal) ── */}
+        {/*WAITING (returned from Pesapal)*/}
         {step === "waiting" && (
           <div style={{ padding: "16px 0" }}>
             <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>✅</div>
@@ -307,7 +291,7 @@ const Payment = ({ onPaid }) => {
           </div>
         )}
 
-        {/* ── ERROR ── */}
+        {/*ERROR*/}
         {step === "error" && (
           <div style={{ padding: "8px 0" }}>
             <p style={{

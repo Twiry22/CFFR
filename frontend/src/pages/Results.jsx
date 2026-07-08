@@ -1,10 +1,3 @@
-/**
- * Results Page  v1.4
- * v1.1 — Shows top 3 + alternates for dual-pick students
- * v1.2 — Profile summary strip moved to below career cards
- * v1.3 — Email prompt modal added before retake
- * v1.4 — Email prompt modal removed (temporarily disabled)
- */
 
 import { useState, useEffect } from "react";
 import ResultCard from "../components/ResultCard";
@@ -18,7 +11,7 @@ const Results = ({ result, onRetake }) => {
     disclaimer,
   } = result;
 
-  // ── Intercept browser refresh / tab close ────────────────────────────────
+  // Intercept browser refresh / tab close 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -28,7 +21,7 @@ const Results = ({ result, onRetake }) => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // Render 
   return (
     <div style={{
       minHeight:     "100vh",

@@ -1,8 +1,3 @@
-/**
- * Welcome Page
- * Clean website feel — no emoji icon, uses the CFFR logo.
- */
-
 const Welcome = ({ onStart }) => {
   return (
     <div style={{
@@ -12,7 +7,7 @@ const Welcome = ({ onStart }) => {
       flexDirection:   "column",
     }}>
 
-      {/* ── Nav Bar ── */}
+      {/*Nav Bar*/}
       <nav style={{
         padding:        "18px 40px",
         display:        "flex",
@@ -45,7 +40,7 @@ const Welcome = ({ onStart }) => {
         </span>
       </nav>
 
-      {/* ── Hero Section ── */}
+      {/* Hero Section */}
       <main style={{
         flex:           "1",
         display:        "flex",
@@ -60,8 +55,7 @@ const Welcome = ({ onStart }) => {
         }}
           className="fade-in-up"
         >
-
-          {/* Logo */}
+          {/*Logo*/}
           <img
             src="/logo.png"
             alt="CFFR"
@@ -71,8 +65,7 @@ const Welcome = ({ onStart }) => {
               marginBottom: "32px",
             }}
           />
-
-          {/* Heading */}
+          {/*Heading*/}
           <h1 style={{
             fontFamily:   "var(--font-display)",
             fontSize:     "clamp(2rem, 5vw, 3rem)",
@@ -83,8 +76,7 @@ const Welcome = ({ onStart }) => {
           }}>
             Find Your Career Direction
           </h1>
-
-          {/* Subheading */}
+          {/*Subheading*/}
           <p style={{
             fontSize:     "1.05rem",
             color:        "var(--text-mid)",
@@ -97,7 +89,7 @@ const Welcome = ({ onStart }) => {
             that best match who you are.
           </p>
 
-          {/* Info row */}
+          {/*Info row*/}
           <div style={{
             display:        "flex",
             justifyContent: "center",
@@ -106,9 +98,9 @@ const Welcome = ({ onStart }) => {
             marginBottom:   "44px",
           }}>
             {[
-              "⏱️ 3 minutes",
+              "3 minutes",
               "🇰🇪 Kenya-specific",
-              "🔒 Private",
+              "Private",
             ].map((pill) => (
               <span key={pill} style={{
                 background:   "var(--royal-blue-pale)",
@@ -140,11 +132,10 @@ const Welcome = ({ onStart }) => {
             CFFR gives you directions to explore: not a final verdict.
             Your interests will grow as you discover more about the world.
           </p>
-
         </div>
       </main>
 
-      {/* ── Footer ── */}
+      {/*Footer*/}
       <footer style={{
         padding:    "16px 40px",
         borderTop:  "1px solid var(--border)",
@@ -158,7 +149,6 @@ const Welcome = ({ onStart }) => {
           © 2026 CFFR · ProjectData Hub · Kenya
         </p>
       </footer>
-
     </div>
   );
 };
