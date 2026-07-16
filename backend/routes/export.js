@@ -1,23 +1,11 @@
-/**
- * CFFR Export Route
- * POST /api/export/save    — called by backend after assessment completes
- * GET  /api/export/records — called by export-to-excel.js to download all records
- *
- * Records are stored in memory + backed up to a local JSON file on the server.
- * This means data survives Render restarts (file persists on disk).
- *
- * v2.1 — Only change from v2.0: saveRecord() is now also exported as a named
- *        function (router.saveRecord) so other routes (like assess.js) can
- *        call it directly in-process instead of duplicating storage logic.
- *        No existing endpoint, storage behaviour, or auth was changed.
- */
+
 
 const express = require("express");
 const fs      = require("fs");
 const path    = require("path");
 const router  = express.Router();
 
-// ─── Storage ──────────────────────────────────────────────────────────────────
+// Storage
 // Records are written to a JSON file so they survive server restarts on Render.
 const DATA_FILE = path.join(__dirname, "../data/student-records.json");
 
@@ -36,7 +24,7 @@ try {
   console.warn("[CFFR Export] Could not load existing records:", err.message);
 }
 
-// ─── Helper: save to disk ─────────────────────────────────────────────────────
+// save to disk
 const saveToDisk = () => {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(records, null, 2));
@@ -45,7 +33,7 @@ const saveToDisk = () => {
   }
 };
 
-// ─── Shared save logic (used by both the HTTP route and direct calls) ────────
+// Shared save logic (used by both the HTTP route and direct calls)
 const saveRecord = (answers, recommendations) => {
   const record = {
     id:              `cffr_${Date.now()}`,
@@ -65,7 +53,7 @@ const saveRecord = (answers, recommendations) => {
   return record;
 };
 
-// ─── POST /api/export/save ────────────────────────────────────────────────────
+// POST/api/export/save
 // Called internally by the assess route after a successful assessment.
 router.post("/save", (req, res) => {
   try {
@@ -84,7 +72,7 @@ router.post("/save", (req, res) => {
   }
 });
 
-// ─── GET /api/export/records ──────────────────────────────────────────────────
+// GET/api/export/records
 // Protected by a secret header — only your export script can call this.
 router.get("/records", (req, res) => {
   const secret = req.headers["x-export-secret"];
