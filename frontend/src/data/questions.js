@@ -4,7 +4,7 @@ const QUESTIONS = [
   // Q1: Subjects enjoyed 
   {
     id: "q1", number: 1, type: "multi", maxPicks: 3,
-    question: "Which subjects did you enjoy the most in school?",
+    question: "Which subjects do you enjoy the most in school?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
@@ -29,7 +29,7 @@ const QUESTIONS = [
   // Q2: Subjects performed best in 
   {
     id: "q2", number: 2, type: "multi", maxPicks: 3,
-    question: "Which subjects did you perform best in?",
+    question: "Which subjects do you perform best in?",
     hint: "Pick up to 3.",
     options: [
       { label: "Mathematics",          value: "mathematics" },
