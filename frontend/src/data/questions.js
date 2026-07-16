@@ -1,20 +1,7 @@
-/**
- * CFFR Questions  v3.1
- * ─────────────────────────────────────────────────────────────────────────────
- * v2.0 — Q11 added (KCSE cluster points, skippable)
- * v3.0 — 4 new career spaces in Q7:
- * v3.1 — Q7 education label updated to "Education, Teaching & Community Development"
- *           Sports, Fitness & Recreation
- *           Hospitality, Tourism & Events
- *           Automotive, Mechanics & Logistics
- *           Beauty, Hair & Wellness
- *         Q1 & Q2: Physical Education now a visible option
- *         Q3: Expanded language to surface hands-on practical paths
- *         Q4: "Hands-on practical" description made more specific
- */
+
 
 const QUESTIONS = [
-  // ── Q1: Subjects enjoyed ──────────────────────────────────────────────────
+  // Q1: Subjects enjoyed 
   {
     id: "q1", number: 1, type: "multi", maxPicks: 3,
     question: "Which subjects did you enjoy the most in school?",
@@ -39,7 +26,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q2: Subjects performed best in ───────────────────────────────────────
+  // Q2: Subjects performed best in 
   {
     id: "q2", number: 2, type: "multi", maxPicks: 3,
     question: "Which subjects did you perform best in?",
@@ -64,7 +51,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q3: Activity preference ───────────────────────────────────────────────
+  // Q3: Activity preference 
   {
     id: "q3", number: 3, type: "dual", maxPicks: 2,
     question: "Which of these feels most like you?",
@@ -85,7 +72,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q4: Personality ───────────────────────────────────────────────────────
+  // Q4: Personality 
   {
     id: "q4", number: 4, type: "dual", maxPicks: 2,
     question: "Which sentence describes you best?",
@@ -100,7 +87,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q5: Job values ────────────────────────────────────────────────────────
+  // Q5: Job values 
   {
     id: "q5", number: 5, type: "dual", maxPicks: 2,
     question: "When you imagine your future job, what matters most to you?",
@@ -115,7 +102,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q6: Tech comfort ──────────────────────────────────────────────────────
+  // Q6: Tech comfort 
   {
     id: "q6", number: 6, type: "single", maxPicks: 1,
     question: "How comfortable are you with technology and digital tools?",
@@ -129,7 +116,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q7: Career spaces — NOW 12 options ───────────────────────────────────
+  // Q7: Career spaces — NOW 12 options 
   {
     id: "q7", number: 7, type: "multi", maxPicks: 3,
     question: "Which of these areas sounds most exciting to you as a future career space?",
@@ -150,7 +137,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q8: Future mindset ────────────────────────────────────────────────────
+  // Q8: Future mindset
   {
     id: "q8", number: 8, type: "dual", maxPicks: 2,
     question: "Which statement feels most true to you?",
@@ -165,7 +152,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q9: County ────────────────────────────────────────────────────────────
+  // Q9: County
   {
     id: "q9", number: 9, type: "county", maxPicks: 1,
     question: "Which county is your school located in?",
@@ -198,7 +185,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q10: Budget ───────────────────────────────────────────────────────────
+  // Q10: Budget
   {
     id: "q10", number: 10, type: "single", maxPicks: 1,
     question: "Roughly how much can your family set aside per year for your education?",
@@ -213,7 +200,7 @@ const QUESTIONS = [
     ],
   },
 
-  // ── Q11: KCSE Cluster Points (optional / skippable) ───────────────────────
+  // Q11: KCSE Cluster Points (optional / skippable) 
   {
     id: "q11", number: 11, type: "kcse", maxPicks: 1,
     question: "Have you sat your KCSE? If yes, what were your cluster points?",

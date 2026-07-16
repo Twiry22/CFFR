@@ -1,9 +1,4 @@
-/**
- * App.jsx  v1.4
- * Welcome is now the public entry point (no access code required).
- * Payment (Pesapal) now sits between Welcome and the Assessment questions.
- * AccessGate has been removed from the flow.
- */
+
 
 import { useState } from "react";
 import Welcome     from "./pages/Welcome";

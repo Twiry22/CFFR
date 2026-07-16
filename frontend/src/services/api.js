@@ -1,7 +1,4 @@
-/**
- * CFFR API Service
- * Handles all communication between the React frontend and the Node.js backend.
- */
+
 
 import axios from "axios";
 
@@ -14,9 +11,7 @@ const api = axios.create({
   timeout: 30000,
 });
 
-/**
- * Sends the student's answers to the backend and returns career recommendations.
- */
+/* Sends the student's answers to the backend and returns career recommendations.*/
 export const submitAssessment = async (answers) => {
   try {
     const response = await api.post("/api/assess", { answers });
