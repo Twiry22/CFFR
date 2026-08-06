@@ -2,52 +2,41 @@
  * CFFR Results Email Route  v1.0
  * POST /api/results/email — sends career results to student's email
  * ─────────────────────────────────────────────────────────────────────────────
- * Uses Nodemailer with Gmail.
+ * Uses Resend through the shared email service.
  *
  * ┌─────────────────────────────────────────────────────────────────────┐
- * │  TO CHANGE THE SENDER EMAIL — update these two env variables        │
+ * │  TO CHANGE THE SENDER EMAIL — update these env variables            │
  * │  in your Render dashboard under Environment:                        │
  * │                                                                     │
- * │  GMAIL_USER = yourname@gmail.com   ← the Gmail you send FROM       │
- * │  GMAIL_PASS = xxxx xxxx xxxx xxxx  ← Gmail App Password (not your  │
- * │                                       normal Gmail password)        │
+ * │  RESEND_API_KEY = re_xxxxxxxxxxxx  ← Your Resend API key           │
+ * │  RESEND_FROM_EMAIL = results@yourdomain.com                         │
+ * │  RESEND_REPLY_TO = support@yourdomain.com  ← Optional              │
  * │                                                                     │
- * │  HOW TO GET A GMAIL APP PASSWORD:                                   │
- * │  1. Go to myaccount.google.com/security                             │
- * │  2. Enable 2-Step Verification (must be on)                         │
- * │  3. Search "App passwords" at the top                               │
- * │  4. Create one → name it "CFFR" → copy the 16-character password   │
- * │  5. Paste it as GMAIL_PASS in Render                                │
+ * │  HOW TO CONFIGURE RESEND:                                           │
+ * │  1. Log in to resend.com                                            │
+ * │  2. Add and verify your sending domain                              │
+ * │  3. Add the provided DNS records to your domain                     │
+ * │  4. Create an API key                                               │
+ * │  5. Add the API key and sender email in Render                      │
  * │                                                                     │
- * │  Never use your real Gmail password — App Password only.            │
+ * │  Never expose RESEND_API_KEY in the frontend.                       │
  * └─────────────────────────────────────────────────────────────────────┘
  */
 
-const express    = require("express");
-const nodemailer = require("nodemailer");
-const router     = express.Router();
+const express = require("express");
+const {
+  sendResultsEmail,
+} = require("../services/emailService");
 
-// ─── Transporter ──────────────────────────────────────────────────────────────
-// To switch from Gmail to a custom domain later, replace this with:
-//   host: "smtp.yourdomain.com", port: 465, secure: true,
-//   auth: { user: "results@yourdomain.com", pass: "..." }
+const router = express.Router();
 
-const createTransporter = () =>
-  nodemailer.createTransport({
-    host:   "smtp.gmail.com",
-    port:   587,          // 587 (STARTTLS) — Render blocks 465 (SSL)
-    secure: false,        // false = STARTTLS on port 587
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS,
-    },
-    connectionTimeout: 10000,
-    greetingTimeout:   10000,
-    socketTimeout:     15000,
-    tls: {
-      rejectUnauthorized: false,  // avoids cert issues on Render
-    },
-  });
+// ─── Email Service ────────────────────────────────────────────────────────────
+// The Resend client and sender configuration are handled inside:
+//
+//   backend/services/emailService.js
+//
+// This route only validates the request, builds the email HTML, calls the
+// shared email service, and returns the HTTP response.
 
 // ─── Email HTML builder ───────────────────────────────────────────────────────
 
@@ -143,35 +132,76 @@ const buildEmailHtml = (recommendations) => {
 router.post("/email", async (req, res) => {
   const { email, recommendations } = req.body;
 
-  if (!email || !recommendations || !Array.isArray(recommendations)) {
-    return res.status(400).json({ success: false, message: "Email and recommendations are required." });
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email address is required.",
+    });
+  }
+
+  if (
+    !Array.isArray(recommendations) ||
+    recommendations.length === 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Recommendations are required.",
+    });
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ success: false, message: "Please provide a valid email address." });
-  }
-
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-    console.error("[CFFR Email] GMAIL_USER or GMAIL_PASS not set in Render environment.");
-    return res.status(500).json({ success: false, message: "Email service not configured." });
+    return res.status(400).json({
+      success: false,
+      message: "Please provide a valid email address.",
+    });
   }
 
   try {
-    const transporter = createTransporter();
+    const data = await sendResultsEmail(
+      email,
+      recommendations,
+      {
+        html: buildEmailHtml(recommendations),
+        subject:
+          "Your CFFR Career Results — Kenya CBC Career Guidance",
+      }
+    );
 
-    await transporter.sendMail({
-      from:    `"CFFR Career Guidance" <${process.env.GMAIL_USER}>`,
-      to:      email,
-      subject: "Your CFFR Career Results — Kenya CBC Career Guidance",
-      html:    buildEmailHtml(recommendations),
+    console.log("[CFFR Email] Results submitted to Resend:", {
+      recipient: email,
+      messageId: data?.id || null,
     });
 
-    console.log(`[CFFR Email] Results sent to: ${email}`);
-    return res.status(200).json({ success: true, message: `Results sent to ${email}` });
+    return res.status(200).json({
+      success: true,
+      message: `Results sent to ${email}.`,
+      messageId: data?.id || null,
+    });
 
-  } catch (err) {
-    console.error("[CFFR Email] Send error:", err.message);
-    return res.status(500).json({ success: false, message: "Could not send email. Please try again." });
+  } catch (error) {
+    console.error("[CFFR Email] Resend error:", {
+      message: error.message,
+      name: error.name,
+      statusCode: error.statusCode,
+      code: error.code,
+      stack: error.stack,
+    });
+
+    if (
+      error.message === "RESEND_API_KEY is missing." ||
+      error.message === "RESEND_FROM_EMAIL is missing."
+    ) {
+      return res.status(500).json({
+        success: false,
+        message: "Email service not configured.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "The results could not be emailed. Please try again.",
+    });
   }
 });
 
