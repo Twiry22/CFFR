@@ -68,8 +68,8 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // ─── Body Parsing ─────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "50kb" }));  // raised from 10kb — results payload can be large
-app.use(express.urlencoded({ extended: false, limit: "50kb" }));
+app.use(express.json({ limit: "250kb" }));  // raised from 10kb — results payload can be large
+app.use(express.urlencoded({ extended: false, limit: "250kb" }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use("/api",          assessRouter);
