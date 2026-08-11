@@ -63,7 +63,7 @@ async function sendResultsEmail(
 
   const subject =
     options.subject ||
-    "Your CFFR Career Results — Kenya CBC Career Guidance";
+    "Career Fit & Future Readiness Guidance";
 
   const emailPayload = {
     from:
