@@ -98,7 +98,7 @@ const buildEmailHtml = (recommendations) => {
 
     <div style="background:#1e40af;border-radius:12px 12px 0 0;padding:28px 32px;text-align:center;">
       <h1 style="color:#ffffff;font-size:22px;font-weight:800;margin:0 0 6px 0;">Your Career Results</h1>
-      <p style="color:#bfdbfe;font-size:13px;margin:0;">Career Fit & Future Readiness — Kenya CBC Career Guidance</p>
+      <p style="color:#bfdbfe;font-size:13px;margin:0;">Career Fit & Future Readiness Guidance</p>
     </div>
 
     <div style="background:#f8fafc;padding:28px 24px;border-radius:0 0 12px 12px;">
