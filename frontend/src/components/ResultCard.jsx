@@ -238,7 +238,7 @@ const ResultCard = ({ recommendation, isAlternate = false }) => {
       {expanded && (
         <div className="fade-in-up" style={{ padding: "28px 32px", borderTop: "1px solid var(--border)" }}>
 
-          {/* 3-year outlook */}
+          {/* 4-year outlook */}
           <div style={{
             background:   "var(--royal-blue-pale)",
             borderRadius: "var(--radius-md)",
