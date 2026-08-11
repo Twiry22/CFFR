@@ -163,7 +163,7 @@ router.post("/email", async (req, res) => {
       {
         html: buildEmailHtml(recommendations),
         subject:
-          "Your CFFR Career Results — Kenya CBC Career Guidance",
+          "Career Fit & Future Readiness Guidance",
       }
     );
 
