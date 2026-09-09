@@ -347,7 +347,6 @@ const LandingPage = ({ onSelectProduct }) => {
       }}>
         {[
           { number: "3 min",label: "To complete" },
-          
         ].map((stat) => (
           <div key={stat.label} style={{ textAlign: "center" }}>
             <div style={{
