@@ -93,7 +93,7 @@ const App = () => {
           maxWidth:     "460px",
           marginBottom: "36px",
         }}>
-          We're working hard on this one. It will be worth the wait — check back soon or reach out to us to be notified when it launches.
+          We're working hard on this one. It will be worth the wait; check back soon or reach out to us to be notified when it launches.
         </p>
         <div style={{
           display:      "flex",
