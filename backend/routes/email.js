@@ -160,9 +160,9 @@ router.post("/email", async (req, res) => {
     const transporter = createTransporter();
 
     await transporter.sendMail({
-      from:    `"CFFR Career Guidance" <${process.env.GMAIL_USER}>`,
+      from:    `"Career Guidance" <${process.env.GMAIL_USER}>`,
       to:      email,
-      subject: "Your CFFR Career Results — Kenya CBC Career Guidance",
+      subject: "CFFR Career Results",
       html:    buildEmailHtml(recommendations),
     });
 
