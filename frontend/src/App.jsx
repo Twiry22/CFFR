@@ -1,13 +1,12 @@
 /**
  * App.jsx  v1.4
  * Flow:
- *   Landing → (select product) → AccessGate → Welcome → Assessment → Results
+ *   Landing → (select product) → Welcome → Assessment → Results
  *   Global / Professional → Coming Soon message
  */
 
 import { useState } from "react";
 import LandingPage from "./pages/LandingPage";
-import AccessGate  from "./components/AccessGate";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
@@ -147,7 +146,6 @@ const App = () => {
   return (
     <>
       {page === PAGES.LANDING    && <LandingPage onSelectProduct={handleSelectProduct} />}
-      {page === PAGES.GATE       && <AccessGate  onUnlock={handleUnlock} onBack={handleBack} />}
       {page === PAGES.WELCOME    && <Welcome      onStart={handleStart} testerName={testerName} />}
       {page === PAGES.ASSESSMENT && <Assessment   onComplete={handleComplete} />}
       {page === PAGES.RESULTS    && <Results      result={result} onRetake={handleRetake} />}
