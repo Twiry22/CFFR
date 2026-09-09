@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import LandingPage from "./pages/LandingPage";
+import Landingpage from "./pages/Landingpage";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
@@ -145,7 +145,7 @@ const App = () => {
 
   return (
     <>
-      {page === PAGES.LANDING    && <LandingPage onSelectProduct={handleSelectProduct} />}
+      {page === PAGES.LANDING    && <Landingpage onSelectProduct={handleSelectProduct} />}
       {page === PAGES.WELCOME    && <Welcome      onStart={handleStart} testerName={testerName} />}
       {page === PAGES.ASSESSMENT && <Assessment   onComplete={handleComplete} />}
       {page === PAGES.RESULTS    && <Results      result={result} onRetake={handleRetake} />}
