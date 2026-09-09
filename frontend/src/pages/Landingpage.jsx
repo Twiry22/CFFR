@@ -159,7 +159,6 @@ const LandingPage = ({ onSelectProduct }) => {
             display: "inline-block",
           }} />
           Career Fit & Future Readiness Platform
-        </div>
 
         {/* Headline */}
         <h1 style={{
@@ -347,11 +346,8 @@ const LandingPage = ({ onSelectProduct }) => {
         background:   "#FAFBFF",
       }}>
         {[
-          { number: "10",   label: "Questions" },
           { number: "3 min",label: "To complete" },
-          { number: "8",    label: "Career clusters" },
-          { number: "47",   label: "Counties covered" },
-          { number: "🇰🇪",  label: "Kenya-specific" },
+          
         ].map((stat) => (
           <div key={stat.label} style={{ textAlign: "center" }}>
             <div style={{
