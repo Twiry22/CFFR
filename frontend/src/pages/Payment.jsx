@@ -132,7 +132,7 @@ const Payment = ({ onPaid }) => {
           lineHeight:   "1.6",
         }}>
           A one-time fee of{" "}
-          <strong style={{ color: "var(--text-dark)" }}>KES 250</strong>{" "}
+          <strong style={{ color: "var(--text-dark)" }}>KES 500</strong>{" "}
           unlocks your full personalised career report.
         </p>
 
@@ -243,7 +243,7 @@ const Payment = ({ onPaid }) => {
               onClick={handlePay}
               style={{ width: "100%" }}
             >
-              Pay KES 250 Securely →
+              Pay KES 500 Securely →
             </button>
 
             <p style={{

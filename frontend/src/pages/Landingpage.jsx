@@ -14,7 +14,7 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "🎓",
       title:       "CFFR High School",
       subtitle:    "Form 3 & Form 4",
-      description: "Discover the career path that fits your personality. Answer 11 questions and get matched to Kenya's most promising career clusters with schools suggestions, real data and a 3-year outlook.",
+      description: "Discover the career path that fits your personality. Answer 11 questions and get personalised career matches, suggested schools & courses in Kenya, and a 3-year outlook on your recommended career paths.",
       color:       "#2C5FC3",
       colorLight:  "#EEF3FC",
       colorMid:    "#D4E1FA",
@@ -28,7 +28,7 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "💼",
       title:       "CFFR Professional",
       subtitle:    "For the Workforce",
-      description: "Already working but feeling uncertain about your direction? CFFR Professional helps you realign, matching your experience, skills and values to where you can truly thrive.",
+      description: "Already working but feeling uncertain about your career direction? CFFR Professional helps you realign, matching your experience, skills and values to where you can truly thrive.",
       color:       "#92400E",
       colorLight:  "#FFFBEB",
       colorMid:    "#FDE68A",
@@ -42,7 +42,7 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "🌍",
       title:       "CFFR Global",
       subtitle:    "Students Worldwide",
-      description: "Career guidance built for students navigating international education systems. Whether you're in East Africa, Europe or beyond, find the path that fits your world.",
+      description: "Career guidance built for students navigating international education systems. From East Africa and beyond, find the path that fits your world.",
       color:       "#0D9488",
       colorLight:  "#F0FDFA",
       colorMid:    "#CCFBF1",
@@ -166,7 +166,7 @@ const LandingPage = ({ onSelectProduct }) => {
           letterSpacing: "-0.02em",
         }}>
           Find the career path<br />
-          <span style={{ color: "#2C5FC3" }}>built for your life.</span>
+          <span style={{ color: "#2C5FC3" }}>built for you.</span>
         </h1>
 
         {/* Subheadline */}
@@ -178,7 +178,7 @@ const LandingPage = ({ onSelectProduct }) => {
           maxWidth:     "560px",
           margin:       "0 auto",
         }}>
-          CFFR matches you to the right career direction using real data, your unique profile, and the opportunities that actually exist in your world.
+          CFFR matches you to the right career direction using real-time data, your unique profile and the opportunities that exist around you.
         </p>
       </div>
 
