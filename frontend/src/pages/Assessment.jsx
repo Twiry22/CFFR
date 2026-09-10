@@ -1,44 +1,103 @@
 /**
- * Assessment Page  v2.1
+ * Assessment Page  v3.0
  * ─────────────────────────────────────────────────────────────────────────────
- * FIX v2.1a — Q11 (kcse type): isAnswered() now correctly treats kcse answers
- *   as valid so Next button enables after a selection is made.
- * FIX v2.1b — County: isAnswered() explicitly handles county type.
- * Q11 is still skippable — Skip button always available on that question.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import QUESTIONS from "../data/questions";
 import QuestionCard from "../components/QuestionCard";
 import ProgressBar from "../components/ProgressBar";
+import Payment from "./Payment";
 import { submitAssessment } from "../services/api";
 
-const Assessment = ({ onComplete }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers]           = useState({});
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState(null);
+const FREE_QUESTION_COUNT = 5;
+const STORAGE_KEY = "cffr_assessment_progress";
 
-  const currentQuestion = QUESTIONS[currentIndex];
+// ── sessionStorage helpers ───────────────────────────────────────────────────
+const loadSavedState = () => {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Guard against a stale save from a previous question-set version
+    if (!Array.isArray(parsed.orderIds) || parsed.orderIds.length !== QUESTIONS.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const clearSavedState = () => {
+  try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+};
+
+const shuffleArray = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+// Builds the question order for this session: restore it if we have a saved
+// one (so a Pesapal redirect doesn't reshuffle mid-attempt), otherwise
+// generate a fresh shuffle.
+const buildInitialOrder = (saved) => {
+  if (saved) {
+    const byId = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
+    const restored = saved.orderIds.map((id) => byId[id]).filter(Boolean);
+    if (restored.length === QUESTIONS.length) return restored;
+  }
+  return shuffleArray(QUESTIONS);
+};
+
+const Assessment = ({ onComplete }) => {
+  const [savedState] = useState(loadSavedState); // read once, on mount
+  const [shuffledQuestions] = useState(() => buildInitialOrder(savedState));
+
+  const [currentIndex, setCurrentIndex] = useState(savedState?.currentIndex ?? 0);
+  const [answers, setAnswers]           = useState(savedState?.answers ?? {});
+  const [paid, setPaid]                 = useState(savedState?.paid ?? false);
+  const [phase, setPhase]               = useState(() => {
+    // If we saved mid-gate (reached Q6 without paying), resume on the gate.
+    if (!savedState?.paid && (savedState?.currentIndex ?? 0) >= FREE_QUESTION_COUNT) {
+      return "payment";
+    }
+    return "questions";
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  const currentQuestion = shuffledQuestions[currentIndex];
   const currentAnswer   = answers[currentQuestion.id];
-  const isLastQuestion  = currentIndex === QUESTIONS.length - 1;
+  const isLastQuestion  = currentIndex === shuffledQuestions.length - 1;
+
+  // ── Persist progress on every relevant change ─────────────────────────────
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        orderIds:    shuffledQuestions.map((q) => q.id),
+        currentIndex,
+        answers,
+        paid,
+      }));
+    } catch {}
+  }, [shuffledQuestions, currentIndex, answers, paid]);
 
   // ── Is current question answered? ─────────────────────────────────────────
   const isAnswered = () => {
     const { type, skippable } = currentQuestion;
 
-    // Skippable questions (Q11) — always allow Next whether answered or not
     if (skippable) return true;
 
-    // No answer at all
     if (currentAnswer === undefined || currentAnswer === null || currentAnswer === "") return false;
 
-    // Single-pick types — need a non-empty string
     if (type === "single" || type === "county" || type === "kcse") {
       return typeof currentAnswer === "string" && currentAnswer.trim() !== "";
     }
 
-    // Multi-pick types — need at least one item in array
     if (type === "multi" || type === "dual") {
       return Array.isArray(currentAnswer) && currentAnswer.length > 0;
     }
@@ -58,11 +117,11 @@ const Assessment = ({ onComplete }) => {
     if (isLastQuestion) {
       submitAndComplete(updated);
     } else {
-      setCurrentIndex((prev) => prev + 1);
+      advanceOrGate(updated);
     }
   };
 
-  // ── Build clean payload ───────────────────────────────────────────────────
+  // ── Build clean payload (still keyed by question.id — order-independent) ──
   const buildPayload = (answersOverride = null) => {
     const src     = answersOverride || answers;
     const payload = { ...src };
@@ -87,6 +146,7 @@ const Assessment = ({ onComplete }) => {
     setError(null);
     try {
       const result = await submitAssessment(buildPayload(answersOverride));
+      clearSavedState(); // fresh shuffle + no gate memory on next attempt
       onComplete(result);
     } catch (err) {
       setError(err.message);
@@ -94,11 +154,25 @@ const Assessment = ({ onComplete }) => {
     }
   };
 
+  // ── Shared "move forward" logic used by both Next and Skip ────────────────
+  // Gates at the boundary between question 5 and question 6, unless already paid.
+  const advanceOrGate = (answersSnapshot) => {
+    const nextIndex = currentIndex + 1;
+
+    if (!paid && currentIndex === FREE_QUESTION_COUNT - 1) {
+      setCurrentIndex(nextIndex); // so a resumed session lands correctly post-payment
+      setPhase("payment");
+      return;
+    }
+
+    setCurrentIndex(nextIndex);
+  };
+
   // ── Next ──────────────────────────────────────────────────────────────────
   const handleNext = async () => {
     if (!isAnswered()) return;
     if (!isLastQuestion) {
-      setCurrentIndex((prev) => prev + 1);
+      advanceOrGate(answers);
     } else {
       await submitAndComplete();
     }
@@ -107,6 +181,19 @@ const Assessment = ({ onComplete }) => {
   const handleBack = () => {
     if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
   };
+
+  // ── Called by Payment.jsx once Pesapal confirms (or the bypass fires) ─────
+  const handlePaymentComplete = () => {
+    setPaid(true);
+    setPhase("questions");
+    // currentIndex was already advanced to FREE_QUESTION_COUNT when the gate
+    // triggered, so the student now sees question 6.
+  };
+
+  // ── Payment gate screen ────────────────────────────────────────────────────
+  if (phase === "payment") {
+    return <Payment onPaid={handlePaymentComplete} />;
+  }
 
   // ── Loading screen ────────────────────────────────────────────────────────
   if (loading) {
@@ -154,7 +241,7 @@ const Assessment = ({ onComplete }) => {
       <main style={{ flex: "1", padding: "48px 24px 64px", display: "flex", justifyContent: "center" }}>
         <div style={{ maxWidth: "640px", width: "100%" }}>
 
-          <ProgressBar current={currentIndex + 1} total={QUESTIONS.length} />
+          <ProgressBar current={currentIndex + 1} total={shuffledQuestions.length} />
 
           <div className="fade-in-up" style={{ marginBottom: "40px" }}>
             <QuestionCard
@@ -186,7 +273,7 @@ const Assessment = ({ onComplete }) => {
               </button>
             )}
 
-            {/* Skip button — only for skippable questions (Q11) */}
+            {/* Skip button — only for skippable questions (Q11), wherever it lands */}
             {currentQuestion.skippable && (
               <button
                 onClick={handleSkip}

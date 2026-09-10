@@ -1,12 +1,13 @@
 /**
- * App.jsx  v1.4
+ * App.jsx  v1.7
  * Flow:
- *   Landing → (select product) → Welcome → Assessment → Results
+ *   Landing → (select product) → Welcome → Assessment (5 free Qs → Payment
+ *   gate → 6 remaining Qs) → Results
  *   Global / Professional → Coming Soon message
  */
 
 import { useState } from "react";
-import Landingpage from "./pages/Landingpage";
+import LandingPage from "./pages/Landingpage";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
@@ -14,29 +15,42 @@ import "./styles/global.css";
 
 const PAGES = {
   LANDING:    "landing",
-  GATE:       "gate",
   WELCOME:    "welcome",
   ASSESSMENT: "assessment",
   RESULTS:    "results",
   SOON:       "soon",
 };
 
+// If we've just landed back from Pesapal, or via the owner bypass link,
+// start directly on Assessment so it can restore its saved progress and
+// resume on the payment gate (a full page reload from an external redirect
+// resets all React state, so Assessment.jsx's sessionStorage restore is what
+// actually gets the student back to where they left off).
+const getInitialPage = () => {
+  const params  = new URLSearchParams(window.location.search);
+  const payment = params.get("payment");
+  const bypass  = params.get("bypass");
+
+  if (bypass === "cffr-admin-2025") return PAGES.ASSESSMENT;
+  if (payment === "success" || payment === "failed") return PAGES.ASSESSMENT;
+
+  return PAGES.LANDING;
+};
+
 const App = () => {
-  const [page, setPage]           = useState(PAGES.LANDING);
-  const [result, setResult]       = useState(null);
-  const [testerName, setTester]   = useState("");
+  const [page, setPage]               = useState(getInitialPage);
+  const [result, setResult]           = useState(null);
   const [selectedProduct, setProduct] = useState(null);
 
   const handleSelectProduct = (productId) => {
     setProduct(productId);
     if (productId === "highschool") {
-      setPage(PAGES.GATE);
+      setPage(PAGES.WELCOME);
     } else {
       setPage(PAGES.SOON);
     }
   };
 
-  const handleUnlock   = (name) => { setTester(name); setPage(PAGES.WELCOME); };
   const handleStart    = () => setPage(PAGES.ASSESSMENT);
   const handleComplete = (data) => { setResult(data); setPage(PAGES.RESULTS); };
   const handleRetake   = () => { setResult(null); setPage(PAGES.WELCOME); };
@@ -93,7 +107,7 @@ const App = () => {
           maxWidth:     "460px",
           marginBottom: "36px",
         }}>
-          We're working hard on this one. It will be worth the wait; check back soon or reach out to us to be notified when it launches.
+          We're working hard on this one. It will be worth the wait — check back soon or reach out to us to be notified when it launches.
         </p>
         <div style={{
           display:      "flex",
@@ -145,8 +159,8 @@ const App = () => {
 
   return (
     <>
-      {page === PAGES.LANDING    && <Landingpage onSelectProduct={handleSelectProduct} />}
-      {page === PAGES.WELCOME    && <Welcome      onStart={handleStart} testerName={testerName} />}
+      {page === PAGES.LANDING    && <LandingPage onSelectProduct={handleSelectProduct} />}
+      {page === PAGES.WELCOME    && <Welcome      onStart={handleStart} />}
       {page === PAGES.ASSESSMENT && <Assessment   onComplete={handleComplete} />}
       {page === PAGES.RESULTS    && <Results      result={result} onRetake={handleRetake} />}
     </>

@@ -152,13 +152,8 @@ const LandingPage = ({ onSelectProduct }) => {
           textTransform:  "uppercase",
           marginBottom:   "28px",
         }}>
-          <span style={{
-            width: "7px", height: "7px",
-            borderRadius: "50%",
-            background: "#2C5FC3",
-            display: "inline-block",
-          }} />
           Career Fit & Future Readiness Platform
+        </div>
 
         {/* Headline */}
         <h1 style={{
