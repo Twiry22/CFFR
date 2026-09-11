@@ -1,5 +1,5 @@
 /**
- * LandingPage.jsx
+ * LandingPage.jsx  v1.1
  * CFFR Platform Landing — premium, clean, confident.
  * Three product cards: High School, Global, Professional.
  */
@@ -14,7 +14,7 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "🎓",
       title:       "CFFR High School",
       subtitle:    "Form 3 & Form 4",
-      description: "Discover the career path that fits your personality. Answer 11 questions and get personalised career matches, suggested schools & courses in Kenya, and a 3-year outlook on your recommended career paths.",
+      description: "Discover the career path that fits your personality. Answer 11 questions and get matched to Kenya's most promising career clusters with schools suggestions, real data and a 3-year outlook.",
       color:       "#2C5FC3",
       colorLight:  "#EEF3FC",
       colorMid:    "#D4E1FA",
@@ -28,7 +28,7 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "💼",
       title:       "CFFR Professional",
       subtitle:    "For the Workforce",
-      description: "Already working but feeling uncertain about your career direction? CFFR Professional helps you realign, matching your experience, skills and values to where you can truly thrive.",
+      description: "Already working but feeling uncertain about your direction? CFFR Professional helps you realign, matching your experience, skills and values to where you can truly thrive.",
       color:       "#92400E",
       colorLight:  "#FFFBEB",
       colorMid:    "#FDE68A",
@@ -42,13 +42,20 @@ const LandingPage = ({ onSelectProduct }) => {
       icon:        "🌍",
       title:       "CFFR Global",
       subtitle:    "Students Worldwide",
-      description: "Career guidance built for students navigating international education systems. From East Africa and beyond, find the path that fits your world.",
+      description: "Career guidance built for students navigating international education systems. Whether you're in East Africa, Europe or beyond, find the path that fits your world.",
       color:       "#0D9488",
       colorLight:  "#F0FDFA",
       colorMid:    "#CCFBF1",
       cta:         "Notify Me →",
       available:   false,
     },
+  ];
+
+  // Contact opens mail (mirrors the address already shown in the footer).
+  // Products/About were dropped — on a single short page they just pointed
+  // back to content already visible without adding real value.
+  const navItems = [
+    { label: "Contact", onClick: () => { window.location.href = "mailto:projectdatahb@gmail.com"; } },
   ];
 
   return (
@@ -91,18 +98,24 @@ const LandingPage = ({ onSelectProduct }) => {
 
         {/* Nav links */}
         <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          {["Products", "About", "Contact"].map((item) => (
-            <span key={item} style={{
-              fontSize:   "0.88rem",
-              fontWeight: "500",
-              color:      "#64748B",
-              cursor:     "pointer",
-              transition: "color 0.15s ease",
-            }}
+          {navItems.map((item) => (
+            <span
+              key={item.label}
+              role="button"
+              tabIndex={0}
+              onClick={item.onClick}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") item.onClick(); }}
+              style={{
+                fontSize:   "0.88rem",
+                fontWeight: "500",
+                color:      "#64748B",
+                cursor:     "pointer",
+                transition: "color 0.15s ease",
+              }}
               onMouseEnter={(e) => e.target.style.color = "#2C5FC3"}
               onMouseLeave={(e) => e.target.style.color = "#64748B"}
             >
-              {item}
+              {item.label}
             </span>
           ))}
         </div>
@@ -127,14 +140,16 @@ const LandingPage = ({ onSelectProduct }) => {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
-      <div style={{
-        padding:        "80px 48px 64px",
-        textAlign:      "center",
-        maxWidth:       "720px",
-        margin:         "0 auto",
-        width:          "100%",
-      }}
+      {/* ── HERO / ABOUT ── */}
+      <div
+        id="about-section"
+        style={{
+          padding:        "80px 48px 64px",
+          textAlign:      "center",
+          maxWidth:       "720px",
+          margin:         "0 auto",
+          width:          "100%",
+        }}
         className="fade-in-up"
       >
         {/* Eyebrow */}
@@ -166,7 +181,7 @@ const LandingPage = ({ onSelectProduct }) => {
           letterSpacing: "-0.02em",
         }}>
           Find the career path<br />
-          <span style={{ color: "#2C5FC3" }}>built for you.</span>
+          <span style={{ color: "#2C5FC3" }}>built for your life.</span>
         </h1>
 
         {/* Subheadline */}
@@ -178,20 +193,23 @@ const LandingPage = ({ onSelectProduct }) => {
           maxWidth:     "560px",
           margin:       "0 auto",
         }}>
-          CFFR matches you to the right career direction using real-time data, your unique profile and the opportunities that exist around you.
+          CFFR matches you to the right career direction using real data, your unique profile, and the opportunities that actually exist in your world.
         </p>
       </div>
 
       {/* ── PRODUCT CARDS ── */}
-      <div style={{
-        padding:             "0 48px 80px",
-        display:             "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-        gap:                 "24px",
-        maxWidth:            "1100px",
-        margin:              "0 auto",
-        width:               "100%",
-      }}>
+      <div
+        id="products-section"
+        style={{
+          padding:             "0 48px 80px",
+          display:             "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap:                 "24px",
+          maxWidth:            "1100px",
+          margin:              "0 auto",
+          width:               "100%",
+        }}
+      >
         {products.map((product) => (
           <div
             key={product.id}
@@ -331,19 +349,39 @@ const LandingPage = ({ onSelectProduct }) => {
 
       {/* ── STATS STRIP ── */}
       <div style={{
-        borderTop:    "1px solid #F1F5F9",
-        borderBottom: "1px solid #F1F5F9",
-        padding:      "32px 48px",
-        display:      "flex",
-        justifyContent: "center",
-        gap:          "64px",
-        flexWrap:     "wrap",
-        background:   "#FAFBFF",
+        position:       "relative",
+        borderTop:      "1px solid #F1F5F9",
+        borderBottom:   "1px solid #F1F5F9",
+        padding:        "32px 48px",
+        display:        "flex",
+        justifyContent: "flex-start",
+        gap:            "64px",
+        flexWrap:       "wrap",
+        background:     "#FAFBFF",
+        overflow:       "hidden",
       }}>
+        {/* Watermark — place the logo file at /public/pdh-logo.png */}
+        <img
+          src="/pdh-logo.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            position:      "absolute",
+            right:         "32px",
+            top:           "50%",
+            transform:     "translateY(-50%)",
+            height:        "88px",
+            width:         "auto",
+            opacity:       0.07,
+            pointerEvents: "none",
+          }}
+          onError={(e) => { e.target.style.display = "none"; }}
+        />
+
         {[
-          { number: "3 min",label: "To complete" },
+          { number: "3 min", label: "To complete" },
         ].map((stat) => (
-          <div key={stat.label} style={{ textAlign: "center" }}>
+          <div key={stat.label} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
             <div style={{
               fontFamily:   "var(--font-display)",
               fontSize:     "1.6rem",
@@ -368,14 +406,17 @@ const LandingPage = ({ onSelectProduct }) => {
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{
-        padding:        "28px 48px",
-        display:        "flex",
-        alignItems:     "center",
-        justifyContent: "space-between",
-        flexWrap:       "wrap",
-        gap:            "12px",
-      }}>
+      <footer
+        id="contact-section"
+        style={{
+          padding:        "28px 48px",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "space-between",
+          flexWrap:       "wrap",
+          gap:            "12px",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{
             fontFamily: "var(--font-display)",
@@ -385,12 +426,12 @@ const LandingPage = ({ onSelectProduct }) => {
           }}>
             CFFR
           </span>
-          <span style={{ fontSize: "0.78rem", color: "#CBD5E1" }}>·</span>
-          <span style={{ fontSize: "0.78rem", color: "#94A3B8" }}>
+          <span style={{ fontSize: "0.78rem", color: "#94A3B8" }}>·</span>
+          <span style={{ fontSize: "0.78rem", color: "#334155" }}>
             A ProjectDataHub Initiative · Kenya · 2026
           </span>
         </div>
-        <span style={{ fontSize: "0.78rem", color: "#CBD5E1" }}>
+        <span style={{ fontSize: "0.78rem", color: "#334155" }}>
           projectdatahb@gmail.com
         </span>
       </footer>
