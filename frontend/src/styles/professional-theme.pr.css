@@ -1,0 +1,19 @@
+/**
+ * professional-theme.css
+ * CFFR Professional — brown / cream / nude palette. Flat fills only, no gradients.
+ * Imported by Professional's own pages only — High School's global.css is untouched.
+ */
+
+:root {
+  --pro-cream:       #FBF7F1;
+  --pro-cream-alt:   #F3EAE0;
+  --pro-brown-dark:  #3E2A1D;
+  --pro-brown:       #92400E;
+  --pro-brown-hover: #7A3410;
+  --pro-nude:        #C9A27E;
+  --pro-nude-hover:  #B8916A;
+  --pro-nude-pale:   #EDE0D2;
+  --pro-text-mid:    #6B5B4E;
+  --pro-text-light:  #9C8A7A;
+  --pro-border:      #E5D8C8;
+}
