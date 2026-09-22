@@ -12,7 +12,7 @@ import LandingPage from "./pages/Landingpage";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
-import ProWelcome  from "./pages/professional/Welcome.pr";
+import ProWelcome  from "./pages/Welcome.pr";
 import "./styles/global.css";
 
 const PAGES = {
