@@ -7,7 +7,7 @@
  * (hover states just shift to a darker/lighter flat shade).
  */
 
-import "../../styles/professional-theme.pr.css";
+import "../../styles/professionaltheme.pr.css";
 
 const Welcome = ({ onStart, onBack }) => {
   return (
