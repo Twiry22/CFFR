@@ -1,4 +1,4 @@
-const Welcome = ({ onStart }) => {
+const Welcome = ({ onStart, onBack }) => {
   return (
     <div style={{
       minHeight:       "100vh",
@@ -31,13 +31,35 @@ const Welcome = ({ onStart }) => {
             CFFR
           </span>
         </div>
-        <span style={{
-          fontSize:   "0.82rem",
-          color:      "var(--text-light)",
-          fontFamily: "var(--font-body)",
-        }}>
-          Career Fit & Future Readiness
-        </span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+          {onBack && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={onBack}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onBack(); }}
+              style={{
+                fontSize:   "0.82rem",
+                fontWeight: "600",
+                color:      "var(--text-light)",
+                cursor:     "pointer",
+                transition: "color 0.15s ease",
+              }}
+              onMouseEnter={(e) => e.target.style.color = "var(--royal-blue)"}
+              onMouseLeave={(e) => e.target.style.color = "var(--text-light)"}
+            >
+              ← Back to Products
+            </span>
+          )}
+          <span style={{
+            fontSize:   "0.82rem",
+            color:      "var(--text-light)",
+            fontFamily: "var(--font-body)",
+          }}>
+            Career Fit & Future Readiness
+          </span>
+        </div>
       </nav>
 
       {/* Hero Section */}

@@ -9,7 +9,7 @@
 
 import "../../styles/professional-theme.pr.css";
 
-const Welcome = ({ onStart }) => {
+const Welcome = ({ onStart, onBack }) => {
   return (
     <div style={{
       minHeight:     "100vh",
@@ -44,19 +44,40 @@ const Welcome = ({ onStart }) => {
           </span>
         </div>
 
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={() => { window.location.href = "mailto:projectdatahb@gmail.com"; }}
-          style={{
-            fontSize:   "0.82rem",
-            color:      "var(--pro-text-mid)",
-            fontFamily: "var(--font-body)",
-            cursor:     "pointer",
-          }}
-        >
-          Contact
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+          {onBack && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={onBack}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onBack(); }}
+              style={{
+                fontSize:   "0.82rem",
+                fontWeight: "600",
+                color:      "var(--pro-text-light)",
+                cursor:     "pointer",
+                transition: "color 0.15s ease",
+              }}
+              onMouseEnter={(e) => e.target.style.color = "var(--pro-brown)"}
+              onMouseLeave={(e) => e.target.style.color = "var(--pro-text-light)"}
+            >
+              ← Back to Products
+            </span>
+          )}
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={() => { window.location.href = "mailto:projectdatahb@gmail.com"; }}
+            style={{
+              fontSize:   "0.82rem",
+              color:      "var(--pro-text-mid)",
+              fontFamily: "var(--font-body)",
+              cursor:     "pointer",
+            }}
+          >
+            
+          </span>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -107,8 +128,8 @@ const Welcome = ({ onStart }) => {
             maxWidth:     "480px",
             margin:       "0 auto 40px",
           }}>
-            Your qualifications, your experience, and where they can actually
-            take you next. Built on real data, not guesswork.
+            Your qualifications, experience and where they can actually
+            take you next. Built on real data.
           </p>
 
           {/* Info row */}
@@ -169,8 +190,8 @@ const Welcome = ({ onStart }) => {
             marginTop:  "22px",
             lineHeight: "1.6",
           }}>
-            CFFR Professional maps your background to real openings —
-            it's a starting point, not a verdict.
+            CFFR Professional maps your background to real openings 
+            as a starting point, not a verdict.
           </p>
         </div>
       </main>

@@ -2,6 +2,7 @@
  * LandingPage.jsx  v1.1
  * CFFR Platform Landing — premium, clean, confident.
  * Three product cards: High School, Global, Professional.
+ *
  */
 
 const LandingPage = ({ onSelectProduct }) => {
@@ -11,7 +12,7 @@ const LandingPage = ({ onSelectProduct }) => {
       id:          "highschool",
       badge:       "Available Now",
       badgeLive:   true,
-      icon:        "🎓",
+      icon:        "",
       title:       "CFFR High School",
       subtitle:    "Form 3 & Form 4",
       description: "Discover the career path that fits your personality. Answer 11 questions and get matched to Kenya's most promising career clusters with schools suggestions, real data and a 3-year outlook.",
@@ -23,23 +24,23 @@ const LandingPage = ({ onSelectProduct }) => {
     },
         {
       id:          "professional",
-      badge:       "Coming Soon",
-      badgeLive:   false,
-      icon:        "💼",
+      badge:       "Available Now",
+      badgeLive:   true,
+      icon:        "",
       title:       "CFFR Professional",
       subtitle:    "For the Workforce",
       description: "Already working but feeling uncertain about your direction? CFFR Professional helps you realign, matching your experience, skills and values to where you can truly thrive.",
       color:       "#92400E",
       colorLight:  "#FFFBEB",
       colorMid:    "#FDE68A",
-      cta:         "Notify Me →",
-      available:   false,
+      cta:         "Start Assessment →",
+      available:   true,
     },
     {
       id:          "global",
       badge:       "Coming Soon",
       badgeLive:   false,
-      icon:        "🌍",
+      icon:        "",
       title:       "CFFR Global",
       subtitle:    "Students Worldwide",
       description: "Career guidance built for students navigating international education systems. Whether you're in East Africa, Europe or beyond, find the path that fits your world.",
@@ -51,9 +52,6 @@ const LandingPage = ({ onSelectProduct }) => {
     },
   ];
 
-  // Contact opens mail (mirrors the address already shown in the footer).
-  // Products/About were dropped — on a single short page they just pointed
-  // back to content already visible without adding real value.
   const navItems = [
     { label: "Contact", onClick: () => { window.location.href = "mailto:projectdatahb@gmail.com"; } },
   ];
@@ -181,7 +179,7 @@ const LandingPage = ({ onSelectProduct }) => {
           letterSpacing: "-0.02em",
         }}>
           Find the career path<br />
-          <span style={{ color: "#2C5FC3" }}>built for your life.</span>
+          <span style={{ color: "#2C5FC3" }}>built for you.</span>
         </h1>
 
         {/* Subheadline */}
@@ -379,7 +377,7 @@ const LandingPage = ({ onSelectProduct }) => {
         />
 
         {[
-          
+          {  },
         ].map((stat) => (
           <div key={stat.label} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
             <div style={{

@@ -4,6 +4,7 @@
  *   Landing → (select product) → Welcome → Assessment (5 free Qs → Payment
  *   gate → 6 remaining Qs) → Results
  *   Global / Professional → Coming Soon message
+ *
  */
 
 import { useState } from "react";
@@ -11,21 +12,20 @@ import LandingPage from "./pages/Landingpage";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
+import ProWelcome  from "./pages/professional/Welcome.pr";
 import "./styles/global.css";
 
 const PAGES = {
-  LANDING:    "landing",
-  WELCOME:    "welcome",
-  ASSESSMENT: "assessment",
-  RESULTS:    "results",
-  SOON:       "soon",
+  LANDING:        "landing",
+  WELCOME:        "welcome",
+  ASSESSMENT:     "assessment",
+  RESULTS:        "results",
+  SOON:           "soon",
+  PRO_WELCOME:    "pro-welcome",
+  PRO_ASSESSMENT: "pro-assessment", // stub until Assessment.pr.jsx is built
 };
 
-// If we've just landed back from Pesapal, or via the owner bypass link,
-// start directly on Assessment so it can restore its saved progress and
-// resume on the payment gate (a full page reload from an external redirect
-// resets all React state, so Assessment.jsx's sessionStorage restore is what
-// actually gets the student back to where they left off).
+
 const getInitialPage = () => {
   const params  = new URLSearchParams(window.location.search);
   const payment = params.get("payment");
@@ -46,23 +46,26 @@ const App = () => {
     setProduct(productId);
     if (productId === "highschool") {
       setPage(PAGES.WELCOME);
+    } else if (productId === "professional") {
+      setPage(PAGES.PRO_WELCOME);
     } else {
       setPage(PAGES.SOON);
     }
   };
 
-  const handleStart    = () => setPage(PAGES.ASSESSMENT);
-  const handleComplete = (data) => { setResult(data); setPage(PAGES.RESULTS); };
-  const handleRetake   = () => { setResult(null); setPage(PAGES.WELCOME); };
-  const handleBack     = () => setPage(PAGES.LANDING);
+  const handleStart      = () => setPage(PAGES.ASSESSMENT);
+  const handleProStart   = () => setPage(PAGES.PRO_ASSESSMENT);
+  const handleComplete   = (data) => { setResult(data); setPage(PAGES.RESULTS); };
+  const handleRetake     = () => { setResult(null); setPage(PAGES.WELCOME); };
+  const handleBack       = () => setPage(PAGES.LANDING);
 
   // ── Coming Soon screen ──────────────────────────────────────────────────────
   if (page === PAGES.SOON) {
     const productNames = {
-      global:       { name: "CFFR Global",       color: "#0D9488", icon: "🌍" },
-      professional: { name: "CFFR Professional",  color: "#92400E", icon: "💼" },
+      global:       { name: "CFFR Global",       color: "#0D9488", icon: "" },
+      professional: { name: "CFFR Professional",  color: "#92400E", icon: "" },
     };
-    const p = productNames[selectedProduct] || { name: "This product", color: "#2C5FC3", icon: "🚀" };
+    const p = productNames[selectedProduct] || { name: "This product", color: "#2C5FC3", icon: "" };
 
     return (
       <div style={{
@@ -107,7 +110,7 @@ const App = () => {
           maxWidth:     "460px",
           marginBottom: "36px",
         }}>
-          We're working hard on this one. It will be worth the wait — check back soon or reach out to us to be notified when it launches.
+          We're working hard on this one. Check back soon or reach out to us to be notified when it launches.
         </p>
         <div style={{
           display:      "flex",
@@ -159,10 +162,39 @@ const App = () => {
 
   return (
     <>
-      {page === PAGES.LANDING    && <LandingPage onSelectProduct={handleSelectProduct} />}
-      {page === PAGES.WELCOME    && <Welcome      onStart={handleStart} />}
-      {page === PAGES.ASSESSMENT && <Assessment   onComplete={handleComplete} />}
-      {page === PAGES.RESULTS    && <Results      result={result} onRetake={handleRetake} />}
+      {page === PAGES.LANDING        && <LandingPage onSelectProduct={handleSelectProduct} />}
+      {page === PAGES.WELCOME        && <Welcome      onStart={handleStart} onBack={handleBack} />}
+      {page === PAGES.ASSESSMENT     && <Assessment   onComplete={handleComplete} />}
+      {page === PAGES.RESULTS        && <Results      result={result} onRetake={handleRetake} />}
+      {page === PAGES.PRO_WELCOME    && <ProWelcome   onStart={handleProStart} onBack={handleBack} />}
+      {page === PAGES.PRO_ASSESSMENT && (
+        <div style={{
+          minHeight: "100vh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: "16px",
+          background: "var(--pro-cream, #FBF7F1)", padding: "40px 24px", textAlign: "center",
+        }}>
+          <p style={{
+            fontFamily: "var(--font-display)", fontWeight: "700",
+            fontSize: "1.1rem", color: "var(--pro-brown-dark, #3E2A1D)",
+          }}>
+            The Professional assessment is still being built.
+          </p>
+          <p style={{ fontSize: "0.9rem", color: "var(--pro-text-mid, #6B5B4E)" }}>
+            Check back soon — this is next on the list.
+          </p>
+          <button
+            onClick={handleBack}
+            style={{
+              marginTop: "8px", padding: "10px 24px", borderRadius: "8px",
+              border: "none", background: "var(--pro-brown, #92400E)",
+              color: "#FBF7F1", fontFamily: "var(--font-display)",
+              fontWeight: "700", cursor: "pointer",
+            }}
+          >
+            ← Back to Products
+          </button>
+        </div>
+      )}
     </>
   );
 };
