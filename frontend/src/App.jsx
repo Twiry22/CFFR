@@ -180,7 +180,7 @@ const App = () => {
             The Professional assessment is still being built.
           </p>
           <p style={{ fontSize: "0.9rem", color: "var(--pro-text-mid, #6B5B4E)" }}>
-            Check back soon — this is next on the list.
+            Check back soon!
           </p>
           <button
             onClick={handleBack}
