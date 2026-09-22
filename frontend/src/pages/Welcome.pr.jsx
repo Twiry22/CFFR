@@ -7,7 +7,7 @@
  * (hover states just shift to a darker/lighter flat shade).
  */
 
-import "../../styles/professionaltheme.pr.css";
+import "../styles/professionaltheme.pr.css";
 
 const Welcome = ({ onStart, onBack }) => {
   return (
@@ -128,7 +128,7 @@ const Welcome = ({ onStart, onBack }) => {
             maxWidth:     "480px",
             margin:       "0 auto 40px",
           }}>
-            Your qualifications, experience and where they can actually
+            Your qualifications, experience, interest and where they can actually
             take you next. Built on real data.
           </p>
 
@@ -191,7 +191,7 @@ const Welcome = ({ onStart, onBack }) => {
             lineHeight: "1.6",
           }}>
             CFFR Professional maps your background to real openings 
-            as a starting point, not a verdict.
+            you make the final call.
           </p>
         </div>
       </main>

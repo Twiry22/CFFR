@@ -52,10 +52,6 @@ const LandingPage = ({ onSelectProduct }) => {
     },
   ];
 
-  const navItems = [
-    { label: "Contact", onClick: () => { window.location.href = "mailto:projectdatahb@gmail.com"; } },
-  ];
-
   return (
     <div style={{
       minHeight:     "100vh",
@@ -92,30 +88,6 @@ const LandingPage = ({ onSelectProduct }) => {
           }}>
             CFFR
           </span>
-        </div>
-
-        {/* Nav links */}
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          {navItems.map((item) => (
-            <span
-              key={item.label}
-              role="button"
-              tabIndex={0}
-              onClick={item.onClick}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") item.onClick(); }}
-              style={{
-                fontSize:   "0.88rem",
-                fontWeight: "500",
-                color:      "#64748B",
-                cursor:     "pointer",
-                transition: "color 0.15s ease",
-              }}
-              onMouseEnter={(e) => e.target.style.color = "#2C5FC3"}
-              onMouseLeave={(e) => e.target.style.color = "#64748B"}
-            >
-              {item.label}
-            </span>
-          ))}
         </div>
 
         {/* Nav CTA */}
@@ -191,7 +163,7 @@ const LandingPage = ({ onSelectProduct }) => {
           maxWidth:     "560px",
           margin:       "0 auto",
         }}>
-          CFFR matches you to the right career direction using real data, your unique profile, and the opportunities that actually exist in your world.
+          CFFR matches you to the right career direction using real data, your unique profile and the opportunities that actually exist where you are.
         </p>
       </div>
 
@@ -429,9 +401,28 @@ const LandingPage = ({ onSelectProduct }) => {
             A ProjectDataHub Initiative · Kenya · 2026
           </span>
         </div>
-        <span style={{ fontSize: "0.78rem", color: "#334155" }}>
-          projectdatahb@gmail.com
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={() => { window.location.href = "https://projectdatahub.org/#contact"; }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { window.location.href = "https://projectdatahub.org/#contact"; } }}
+            style={{
+              fontSize:   "0.78rem",
+              fontWeight: "500",
+              color:      "#334155",
+              cursor:     "pointer",
+              transition: "color 0.15s ease",
+            }}
+            onMouseEnter={(e) => e.target.style.color = "#2C5FC3"}
+            onMouseLeave={(e) => e.target.style.color = "#334155"}
+          >
+            Contact
+          </span>
+          <span style={{ fontSize: "0.78rem", color: "#334155" }}>
+      
+          </span>
+        </div>
       </footer>
 
       {/* Pulse animation */}
