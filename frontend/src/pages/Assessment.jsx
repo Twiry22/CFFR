@@ -1,6 +1,5 @@
 /**
  * Assessment Page  v3.0
- * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import { useState, useEffect } from "react";

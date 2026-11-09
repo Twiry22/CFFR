@@ -1,18 +1,21 @@
 /**
- * App.jsx  v1.7
+ * App.jsx  v1.8
  * Flow:
  *   Landing → (select product) → Welcome → Assessment (5 free Qs → Payment
  *   gate → 6 remaining Qs) → Results
- *   Global / Professional → Coming Soon message
+ *   Professional → ProWelcome → ProAssessment (3 free Qs → Payment gate →
+ *   Track Record → remaining Qs)
+ *   Global → Coming Soon message
  *
  */
 
-import { useState } from "react";
-import LandingPage from "./pages/Landingpage";
+import { useState, useEffect, useCallback } from "react";
+import LandingPage from "./pages/LandingPage";
 import Welcome     from "./pages/Welcome";
 import Assessment  from "./pages/Assessment";
 import Results     from "./pages/Results";
 import ProWelcome  from "./pages/Welcome.pr";
+import ProAssessment from "./pages/Assessment.pr";
 import "./styles/global.css";
 
 const PAGES = {
@@ -22,10 +25,14 @@ const PAGES = {
   RESULTS:        "results",
   SOON:           "soon",
   PRO_WELCOME:    "pro-welcome",
-  PRO_ASSESSMENT: "pro-assessment", // stub until Assessment.pr.jsx is built
+  PRO_ASSESSMENT: "pro-assessment",
 };
 
-
+// If we've just landed back from Pesapal, or via the owner bypass link,
+// start directly on Assessment so it can restore its saved progress and
+// resume on the payment gate (a full page reload from an external redirect
+// resets all React state, so Assessment.jsx's sessionStorage restore is what
+// actually gets the student back to where they left off).
 const getInitialPage = () => {
   const params  = new URLSearchParams(window.location.search);
   const payment = params.get("payment");
@@ -42,30 +49,68 @@ const App = () => {
   const [result, setResult]           = useState(null);
   const [selectedProduct, setProduct] = useState(null);
 
+  // On first mount, replace (not push) so the very first history entry
+  // represents the current page — otherwise the initial load has no state
+  // attached and a back-press from it would land on `undefined`.
+  useEffect(() => {
+    window.history.replaceState({ page }, "", window.location.pathname + window.location.search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Every real navigation should go through this instead of setPage
+  // directly — it updates state AND pushes a browser history entry, which
+  // is what the back/forward buttons actually read from. Without this,
+  // "page" is just in-memory state with nothing for the browser to go back
+  // to, which is exactly why only a hard refresh used to reset anything.
+  const navigate = useCallback((nextPage) => {
+    setPage(nextPage);
+    window.history.pushState({ page: nextPage }, "", window.location.pathname);
+  }, []);
+
+  // Back/forward buttons fire this — sync state to whatever page that
+  // history entry represents instead of leaving state untouched.
+  useEffect(() => {
+    const handlePopState = (event) => {
+      setPage(event.state?.page || PAGES.LANDING);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Result data only ever lives in memory, not in the history entry — so
+  // landing on Results via back/forward after a refresh would otherwise
+  // render it with nothing to show. Bounce to Landing instead of breaking.
+  useEffect(() => {
+    if (page === PAGES.RESULTS && !result) {
+      navigate(PAGES.LANDING);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, result]);
+
   const handleSelectProduct = (productId) => {
     setProduct(productId);
     if (productId === "highschool") {
-      setPage(PAGES.WELCOME);
+      navigate(PAGES.WELCOME);
     } else if (productId === "professional") {
-      setPage(PAGES.PRO_WELCOME);
+      navigate(PAGES.PRO_WELCOME);
     } else {
-      setPage(PAGES.SOON);
+      navigate(PAGES.SOON);
     }
   };
 
-  const handleStart      = () => setPage(PAGES.ASSESSMENT);
-  const handleProStart   = () => setPage(PAGES.PRO_ASSESSMENT);
-  const handleComplete   = (data) => { setResult(data); setPage(PAGES.RESULTS); };
-  const handleRetake     = () => { setResult(null); setPage(PAGES.WELCOME); };
-  const handleBack       = () => setPage(PAGES.LANDING);
+  const handleStart      = () => navigate(PAGES.ASSESSMENT);
+  const handleProStart   = () => navigate(PAGES.PRO_ASSESSMENT);
+  const handleComplete   = (data) => { setResult(data); navigate(PAGES.RESULTS); };
+  const handleRetake     = () => { setResult(null); navigate(PAGES.WELCOME); };
+  const handleBack       = () => navigate(PAGES.LANDING);
 
   // ── Coming Soon screen ──────────────────────────────────────────────────────
   if (page === PAGES.SOON) {
     const productNames = {
-      global:       { name: "CFFR Global",       color: "#0D9488", icon: "" },
-      professional: { name: "CFFR Professional",  color: "#92400E", icon: "" },
+      global:       { name: "CFFR Global",       color: "#0D9488", icon: "🌍" },
+      professional: { name: "CFFR Professional",  color: "#92400E", icon: "💼" },
     };
-    const p = productNames[selectedProduct] || { name: "This product", color: "#2C5FC3", icon: "" };
+    const p = productNames[selectedProduct] || { name: "This product", color: "#2C5FC3", icon: "🚀" };
 
     return (
       <div style={{
@@ -110,7 +155,7 @@ const App = () => {
           maxWidth:     "460px",
           marginBottom: "36px",
         }}>
-          We're working hard on this one. Check back soon or reach out to us to be notified when it launches.
+          We're working hard on this one. Check back soon!
         </p>
         <div style={{
           display:      "flex",
@@ -167,34 +212,7 @@ const App = () => {
       {page === PAGES.ASSESSMENT     && <Assessment   onComplete={handleComplete} />}
       {page === PAGES.RESULTS        && <Results      result={result} onRetake={handleRetake} />}
       {page === PAGES.PRO_WELCOME    && <ProWelcome   onStart={handleProStart} onBack={handleBack} />}
-      {page === PAGES.PRO_ASSESSMENT && (
-        <div style={{
-          minHeight: "100vh", display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", gap: "16px",
-          background: "var(--pro-cream, #FBF7F1)", padding: "40px 24px", textAlign: "center",
-        }}>
-          <p style={{
-            fontFamily: "var(--font-display)", fontWeight: "700",
-            fontSize: "1.1rem", color: "var(--pro-brown-dark, #3E2A1D)",
-          }}>
-            The Professional assessment is still being built.
-          </p>
-          <p style={{ fontSize: "0.9rem", color: "var(--pro-text-mid, #6B5B4E)" }}>
-            Check back soon!
-          </p>
-          <button
-            onClick={handleBack}
-            style={{
-              marginTop: "8px", padding: "10px 24px", borderRadius: "8px",
-              border: "none", background: "var(--pro-brown, #92400E)",
-              color: "#FBF7F1", fontFamily: "var(--font-display)",
-              fontWeight: "700", cursor: "pointer",
-            }}
-          >
-            ← Back to Products
-          </button>
-        </div>
-      )}
+      {page === PAGES.PRO_ASSESSMENT && <ProAssessment onBack={handleBack} />}
     </>
   );
 };

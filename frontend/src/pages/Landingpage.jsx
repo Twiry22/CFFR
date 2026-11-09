@@ -1,5 +1,5 @@
 /**
- * LandingPage.jsx  v1.1
+ * LandingPage.jsx  v1.2
  * CFFR Platform Landing — premium, clean, confident.
  * Three product cards: High School, Global, Professional.
  *
@@ -24,7 +24,7 @@ const LandingPage = ({ onSelectProduct }) => {
     },
         {
       id:          "professional",
-      badge:       "Available Now",
+      badge:       "Almost there",
       badgeLive:   true,
       icon:        "",
       title:       "CFFR Professional",
@@ -51,6 +51,8 @@ const LandingPage = ({ onSelectProduct }) => {
       available:   false,
     },
   ];
+
+  const handleContactClick = () => { window.location.href = "https://projectdatahub.org/#contact"; };
 
   return (
     <div style={{
@@ -349,7 +351,7 @@ const LandingPage = ({ onSelectProduct }) => {
         />
 
         {[
-          {  },
+          { },
         ].map((stat) => (
           <div key={stat.label} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
             <div style={{
@@ -401,28 +403,22 @@ const LandingPage = ({ onSelectProduct }) => {
             A ProjectDataHub Initiative · Kenya · 2026
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={() => { window.location.href = "https://projectdatahub.org/#contact"; }}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { window.location.href = "https://projectdatahub.org/#contact"; } }}
-            style={{
-              fontSize:   "0.78rem",
-              fontWeight: "500",
-              color:      "#334155",
-              cursor:     "pointer",
-              transition: "color 0.15s ease",
-            }}
-            onMouseEnter={(e) => e.target.style.color = "#2C5FC3"}
-            onMouseLeave={(e) => e.target.style.color = "#334155"}
-          >
-            Contact
-          </span>
-          <span style={{ fontSize: "0.78rem", color: "#334155" }}>
-      
-          </span>
-        </div>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={handleContactClick}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleContactClick(); }}
+          style={{
+            fontSize:   "0.78rem",
+            color:      "#334155",
+            cursor:     "pointer",
+            transition: "color 0.15s ease",
+          }}
+          onMouseEnter={(e) => e.target.style.color = "#2C5FC3"}
+          onMouseLeave={(e) => e.target.style.color = "#334155"}
+        >
+          Contact
+        </span>
       </footer>
 
       {/* Pulse animation */}
@@ -433,7 +429,6 @@ const LandingPage = ({ onSelectProduct }) => {
         }
         @media (max-width: 600px) {
           nav { padding: 0 20px !important; }
-          nav > div:nth-child(2) { display: none !important; }
         }
       `}</style>
 
